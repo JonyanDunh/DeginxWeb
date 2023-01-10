@@ -1,13 +1,20 @@
+export default function Leftmenu(items) {
 
-export default function Leftmenu() {
     return (
         <>
-            <div className="sm:w-72 w-full ">
-                <ul  className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2 rounded-lg">
-                    <li><a>Item 1</a></li>
-                    <li><a className="active">Item 2</a></li>
-                    <li><a>Item 3</a></li>
-                </ul>
+            <div className="hidden sm:block left-menu sticky mr-4">
+                <div className="sm:w-72 w-full ">
+                    <ul className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2 rounded-lg">
+
+                        {items["items"].map((item) => (<li>
+                            <a>
+                                {item.ItemName}
+                                <div
+                                    className="badge badge-secondary absolute  right-4">{item.ItemChildAmount}</div>
+                            </a></li>))}
+
+                    </ul>
+                </div>
             </div>
         </>
     )

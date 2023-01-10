@@ -1,30 +1,33 @@
 import Layout_sticky_navbar from "../components/layout_sticky_navbar";
-export default function Page() {
-    return (
-        <>
-            <div class="flex flex-wrap justify-center sm:justify-start gap-4">
-
-                <div class="card rounded-lg w-auto sm:w-72 mx-4 sm:mx-0 bg-base-100">
-                    <figure><img src="http://i0.hdslb.com/bfs/archive/312c7066cada83f01719790009fc8a8642145b17.jpg" alt="Shoes"/></figure>
-                    <div className="card-body">
-                        <h2 className="card-title">Shoes!</h2>
-                        <p>If a dog chews shoes whose shoes does he choose?</p>
-                        <div className="card-actions justify-end">
-                            <button className="btn btn-primary">Buy Now</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </>
-    )
+import Items from "../components/tools/items";
+import Leftmenu from "../components/leftmenu";
+export default function Page({LeftMenuItems,tools}) {
+    return (<Layout_sticky_navbar items={LeftMenuItems} page={(<Items tools={tools}/>)} />)
 }
+export async function getStaticProps() {
+    let data;
+    const res = await fetch('http://127.0.0.1:8000/api/tools/get')
+    const tools = await res.json()
+    const Type2Name = { all: "所有", Programmer: "程序员", VideoWebSite: "视频网站", Other: "其他" }
+    let LeftMenuItems=[]
+    let ToolsItems={}
 
-Page.getLayout = function getLayout(page) {
-    return (
-        <>
-        <Layout_sticky_navbar page={page}/>
-
-        </>
-
-    )
+    ToolsItems["all"] = []
+    for (data of tools.data) {
+        ToolsItems["all"].push(data["map"])
+        if (ToolsItems[data["map"]["ItemType"]] == null)
+            ToolsItems[data["map"]["ItemType"]] = [];
+        ToolsItems[data["map"]["ItemType"]].push(data["map"])
+    }
+    let key=0
+    for (data in ToolsItems) {
+        LeftMenuItems.push({ ItemName: Type2Name[data], ItemKey: key, ItemType: data, ItemChildAmount: ToolsItems[data].length })
+        key++
+    }
+    return {
+        props: {
+            tools,
+             LeftMenuItems
+        },
+    }
 }

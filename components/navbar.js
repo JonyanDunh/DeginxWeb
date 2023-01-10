@@ -1,22 +1,18 @@
-export default function Navbar({links}) {
+export default function Navbar({}) {
     return (
         <>
+            <div id="header" className="header w-full p-4 sticky top-0 ">
             <div className="navbar w-full text-neutral-content  rounded-lg glass">
                 <div className="flex-1">
                     <a className="btn btn-ghost normal-case text-xl">DeginX</a>
                 </div>
                 <div className="flex-none">
-
-                    <button   class="btn  btn-ghost hidden sm:block">
-                        主页
-                    </button>
-                    <button
-                             className="btn btn-ghost hidden sm:block">工具
-                    </button>
-                    <button  className="btn btn-ghost hidden sm:block">插件</button>
-                    <button  className="btn btn-ghost hidden sm:block">开放平台</button>
-                    <button  className="btn btn-ghost hidden  sm:block">文档</button>
-                    <button  className="btn btn-ghost hidden sm:block">关于</button>
+                    <button className="btn  btn-ghost hidden sm:block">主页</button>
+                    <button className="btn btn-ghost hidden sm:block">工具</button>
+                    <button className="btn btn-ghost hidden sm:block">插件</button>
+                    <button className="btn btn-ghost hidden sm:block">开放平台</button>
+                    <button className="btn btn-ghost hidden  sm:block">文档</button>
+                    <button className="btn btn-ghost hidden sm:block">关于</button>
                     <div className="dropdown dropdown-end">
                         <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                             <div className="w-10 rounded-full">
@@ -36,6 +32,7 @@ export default function Navbar({links}) {
                         </ul>
                     </div>
                 </div>
+            </div>
             </div>
 
         </>
