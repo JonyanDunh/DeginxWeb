@@ -7,7 +7,7 @@ export default function Page({LeftMenuItems, tools}) {
             MenuItems={
                 (
 
-                    <ul className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2 rounded-lg">
+                    <ul className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2 rounded-lg shadow">
                         {LeftMenuItems.map((item) => (
                             <Link key={item.ItemType} href={item.ItemLink}>
                                 <li>
@@ -24,19 +24,19 @@ export default function Page({LeftMenuItems, tools}) {
                 )
             }
             page={(
-                <div className="flex flex-wrap justify-center sm:justify-start gap-4">
+                <div className="flex flex-wrap  justify-center sm:justify-start  gap-4 ">
                     {tools.data.map((tool) => (
                         <div key={tool.map.ItemUUID}
-                             className="card rounded-lg w-auto sm:w-72 mx-4 sm:mx-0 bg-base-100">
+                             className="card rounded-lg flex-shrink flex-grow w-36 sm:w-72 sm:flex-grow-0 bg-base-100 shadow">
                             <figure>
                                 <img src={tool.map.ItemImg}/>
                             </figure>
-                            <div className="card-body">
+                            <div className="card-body p-4 sm:p-8">
                                 <h2 className="card-title">{tool.map.ItemName}</h2>
-                                <div>{tool.map.ItemDescribe}</div>
+                                <div className="hidden sm:block">{tool.map.ItemDescribe}</div>
                                 <div className="card-actions justify-end">
-                                    <Link href={`/tools/${tool.map.ItemUUID}`}>
-                                        <button disabled={tool.map.disabled} className="btn  btn-primary">立即使用
+                                    <Link  href={`/tools/${tool.map.ItemUUID}`}>
+                                        <button disabled={tool.map.disabled} className="btn  btn-primary ">立即使用
                                         </button>
                                     </Link>
                                 </div>

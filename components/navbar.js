@@ -2,7 +2,7 @@ import Link from 'next/link'
 export default function Navbar({}) {
     return (
         <>
-            <div id="header" className="header w-full p-4  ">
+            <div id="header" className="header w-full my-4   ">
             <div className="navbar w-full text-neutral-content  rounded-lg glass">
                 <div className="flex-1">
                     <a className="btn btn-ghost normal-case text-xl">DeginX</a>

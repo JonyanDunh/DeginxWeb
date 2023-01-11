@@ -1,42 +1,7 @@
 ::-webkit-scrollbar {
     display: none;
 }
-.navbar{
-    top:24px;
-    z-index: 9999;
-}
 .header .navbar {
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-
-}
-.content{
-
-    z-index: 0;
-}
-.left_content{
-    z-index: 0;
-}
-.content .right-content {
-    /*height: calc(100vh - 100px);*/
-    /*overflow-y: auto;*/
-    width: 100%;
-}
-
-.content .left-menu {
-    height: 100%;
-    float: left;
-    top:98px;
-}
-
-.content .left-menu .menu {
-    height: 100%;
-}
-.footer{
-    bottom:0px;
-}
-.tab_content{
-
-}
-.bilibili_profile{
 
 }
