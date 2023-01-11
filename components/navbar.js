@@ -1,3 +1,4 @@
+import Link from 'next/link'
 export default function Navbar({}) {
     return (
         <>
@@ -7,8 +8,8 @@ export default function Navbar({}) {
                     <a className="btn btn-ghost normal-case text-xl">DeginX</a>
                 </div>
                 <div className="flex-none">
-                    <button className="btn  btn-ghost hidden sm:block">主页</button>
-                    <button className="btn btn-ghost hidden sm:block">工具</button>
+                    <Link href="/"> <button className="btn  btn-ghost hidden sm:block">主页</button></Link>
+                    <Link href="/tools/index/all"><button className="btn btn-ghost hidden sm:block">工具</button></Link>
                     <button className="btn btn-ghost hidden sm:block">插件</button>
                     <button className="btn btn-ghost hidden sm:block">开放平台</button>
                     <button className="btn btn-ghost hidden  sm:block">文档</button>
