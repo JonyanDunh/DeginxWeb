@@ -4,7 +4,7 @@ import Footer from "./footer";
 export default function Layout_fixed_navbar({page}) {
     return (
         <div>
-            <div id="header" className="sm:container sm:mx-auto header w-full fixed top-0 right-0 left-0 ">
+            <div id="header" className="sm:container sm:mx-auto  fixed top-0 right-0 left-0  ">
                 <Navbar links="fuck"/>
             </div>
             <div className="content w-full flex flex-wrap sm:flex-nowrap">
