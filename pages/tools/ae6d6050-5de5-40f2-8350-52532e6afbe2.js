@@ -1,13 +1,60 @@
 import Layout_sticky_navbar from "../../components/layout_sticky_navbar";
 import Link from "next/link";
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
+import {useState, useEffect} from 'react'
+import {useRouter} from 'next/router'
+import {useQRCode} from 'next-qrcode';
+
+function getQueryVariable(query, variable) {
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        if (pair[0] == variable) {
+            return pair[1];
+        }
+    }
+    return (false);
+}
+
 export default function Page() {
+    const proxy_domain = "http://proxy.deginx.com/release"
+    const {Canvas} = useQRCode();
     const [isBilibiliLogin, setBilibiliLogin] = useState(false)
-    function BilibiliLoginClickHandler(){
+    const [BilibiliLoginQrcode, setBilibiliLoginQrcode] = useState("https://space.bilibili.com/96876893")
+    const [SESSDATA, setSESSDATA] = useState("")
+    const [bili_jct, setbili_jct] = useState("")
+    useEffect(() => {
+        fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginUrl")
+            .then((res) => res.json())
+            .then((data) => {
+                setBilibiliLoginQrcode(data.data.url)
+
+                var CheckScanStatusID = setInterval(() => {
+                    var urlencoded = new URLSearchParams();
+                    urlencoded.append("oauthKey", data.data.oauthKey);
+                    fetch("http://proxy.deginx.com/release/bilibili/passport/qrcode/getLoginInfo", {
+                        method: 'POST',
+                        body: urlencoded
+                    })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            console.log(data)
+                            if (data.status) {
+                                clearInterval(CheckScanStatusID)
+                                var url = data.data.url
+                                setSESSDATA(getQueryVariable(url, "SESSDATA"))
+                                setbili_jct(getQueryVariable(url, "bili_jct"))
+                            }
+                        })
+                }, 1000)
+
+            })
+    }, [])
+
+    function BilibiliLoginClickHandler() {
         setBilibiliLogin(true)
     }
+
     const bilibili_profile = <div className="bilibili_profile  glass w-full sm:w-72 rounded-lg">
         <div className="tabs">
             <a className="tab-active tab w-1/3 tab-lg tab-lifted font-semibold">资料</a>
@@ -69,23 +116,39 @@ export default function Page() {
                 <div className="text-xl font-bold mb-4">哔哩哔哩账号登录</div>
                 <div className="grid flex flex-col gap-4">
                     <div className="text-left text-base font-bold">
-                        二维码登录
+                        二维码获取Cookie
                     </div>
                     <div className="grid flex-grow place-items-center">
-                        <div className="rounded-lg relative  overflow-hidden h-36 w-36 ">
-                            <Image fill
-                                   src="https://message.biliimg.com/bfs/im/703dec6333b348170b705355be9eb8b52654e236.png"/>
+                        <div className="rounded-lg relative  overflow-hidden  ">
+                            {/*<Image fill*/}
+                            {/*       src="https://message.biliimg.com/bfs/im/703dec6333b348170b705355be9eb8b52654e236.png"/>*/}
+                            <Canvas
+                                text={BilibiliLoginQrcode}
+                                options={{
+                                    level: 'H',
+                                    scale: 3,
+                                    width: 4,
+                                    color: {
+                                        dark: '#010599FF',
+                                        light: '#FFBF60FF',
+                                    },
+                                }}
+                            />
                         </div>
+
                     </div>
+
                 </div>
                 <div className="divider"></div>
                 <div className="grid flex flex-col gap-4">
                     <div className="text-left text-base font-bold">
-                        Cookie登录
+                        手动输入Cookie
                     </div>
                     <div className="grid flex-grow place-items-center gap-4">
-                        <input type="text" placeholder="SESSDATA" className="input input-bordered input-secondary w-full max-w-xs" />
-                        <input type="text" placeholder="bili_jct" className="input input-bordered input-info w-full max-w-xs" />
+                        <input value={SESSDATA} type="text" placeholder="SESSDATA"
+                               className="input input-bordered input-secondary w-full max-w-xs"/>
+                        <input value={bili_jct} type="text" placeholder="bili_jct"
+                               className="input input-bordered input-info w-full max-w-xs"/>
                         <div className="flex  justify-center">
                             <button onClick={BilibiliLoginClickHandler} className="btn btn-success ">登录账号</button>
                         </div>
@@ -98,7 +161,7 @@ export default function Page() {
             MenuItems=
                 {(
                     <div className="left_content  sm:static">
-                        {isBilibiliLogin?bilibili_profile:bilibili_login}
+                        {isBilibiliLogin ? bilibili_profile : bilibili_login}
                         <div className="stats shadow flex flex-col mt-4 rounded-lg">
                             <div className="stat ">
                                 <div className="stat-figure text-secondary ">
