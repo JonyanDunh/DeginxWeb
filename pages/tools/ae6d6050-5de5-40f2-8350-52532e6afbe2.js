@@ -1,68 +1,104 @@
 import Layout_sticky_navbar from "../../components/layout_sticky_navbar";
 import Link from "next/link";
 import Image from 'next/image'
-
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 export default function Page() {
+    const [isBilibiliLogin, setBilibiliLogin] = useState(false)
+    function BilibiliLoginClickHandler(){
+        setBilibiliLogin(true)
+    }
+    const bilibili_profile = <div className="bilibili_profile  glass w-full sm:w-72 rounded-lg">
+        <div className="tabs">
+            <a className="tab-active tab w-1/3 tab-lg tab-lifted font-semibold">资料</a>
+            <a className="tab w-1/3 tab-lg tab-lifted font-semibold">设置</a>
+            <a className="tab w-1/3 tab-lg tab-lifted font-semibold">退出</a>
+        </div>
+        <div className="tab_content bg-base-100  rounded-b-lg">
+            <div className="flex flex-col">
+                <div className="avatar justify-center m-6">
+                    <div className="w-24 mask mask-squircle">
+                        <img
+                            src="https://i0.hdslb.com/bfs/album/07bbfabf11355750b35f34a616f0c78f0a22a8f4.jpg"/>
+                    </div>
+                </div>
+                <div className="text-xl text-center font-bold">JONYAN DUNH</div>
+                <div className="text-center ">
+                    <div
+                        className="text-center font-semibold badge badge-primary badge-outline">uid:
+                    </div>
+                </div>
+                <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
+                    <div className=" rounded-lg p-2  shadow">
+                        <div className="text-2xl">
+                            11.4k
+                        </div>
+                        <div>粉丝</div>
+                    </div>
+                    <div className=" rounded-lg p-2  shadow">
+                        <div className="text-2xl">
+                            5.14k
+                        </div>
+                        <div>视频</div>
+                    </div>
+                    <div className=" rounded-lg p-2  shadow">
+                        <div className="text-2xl">
+                            104
+                        </div>
+                        <div>动态</div>
+                    </div>
+                    <div className=" rounded-lg p-2  shadow">
+                        <div className="text-2xl">
+                            92k
+                        </div>
+                        <div>硬币</div>
+                    </div>
+                </div>
+                <div className="text-center mb-4">
+                    <button className="btn btn-primary">前往个人主页</button>
+                </div>
+                <div className="text-center mb-6">
+                    <button className="btn btn-primary">前往直播间</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    const bilibili_login =
+        <div className="bilibili_login  bg-base-100 w-full sm:w-72 rounded-lg ">
+            <div className="flex flex-col w-full p-4 ">
+                <div className="text-xl font-bold mb-4">哔哩哔哩账号登录</div>
+                <div className="grid flex flex-col gap-4">
+                    <div className="text-left text-base font-bold">
+                        二维码登录
+                    </div>
+                    <div className="grid flex-grow place-items-center">
+                        <div className="rounded-lg relative  overflow-hidden h-36 w-36 ">
+                            <Image fill
+                                   src="https://message.biliimg.com/bfs/im/703dec6333b348170b705355be9eb8b52654e236.png"/>
+                        </div>
+                    </div>
+                </div>
+                <div className="divider"></div>
+                <div className="grid flex flex-col gap-4">
+                    <div className="text-left text-base font-bold">
+                        Cookie登录
+                    </div>
+                    <div className="grid flex-grow place-items-center gap-4">
+                        <input type="text" placeholder="SESSDATA" className="input input-bordered input-secondary w-full max-w-xs" />
+                        <input type="text" placeholder="bili_jct" className="input input-bordered input-info w-full max-w-xs" />
+                        <div className="flex  justify-center">
+                            <button onClick={BilibiliLoginClickHandler} className="btn btn-success ">登录账号</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     return (
         <Layout_sticky_navbar
             MenuItems=
                 {(
                     <div className="left_content  sm:static">
-                        <div className="bilibili_profile  glass w-full sm:w-72 rounded-lg">
-                            <div className="tabs">
-                                <a className="tab-active tab w-1/3 tab-lg tab-lifted font-semibold">资料</a>
-                                <a className="tab w-1/3 tab-lg tab-lifted font-semibold">设置</a>
-                                <a className="tab w-1/3 tab-lg tab-lifted font-semibold">退出</a>
-                            </div>
-                            <div className="tab_content bg-base-100  rounded-b-lg">
-                                <div className="flex flex-col">
-                                    <div className="avatar justify-center m-6">
-                                        <div className="w-24 mask mask-squircle">
-                                            <img
-                                                src="https://i0.hdslb.com/bfs/album/07bbfabf11355750b35f34a616f0c78f0a22a8f4.jpg"/>
-                                        </div>
-                                    </div>
-                                    <div className="text-xl text-center font-bold">JONYAN DUNH</div>
-                                    <div className="text-center ">
-                                        <div
-                                            className="text-center font-semibold badge badge-primary badge-outline">uid:
-                                        </div>
-                                    </div>
-                                    <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
-                                        <div className=" rounded-lg p-2  shadow">
-                                            <div className="text-2xl">
-                                                11.4k
-                                            </div>
-                                            <div>粉丝</div>
-                                        </div>
-                                        <div className=" rounded-lg p-2  shadow">
-                                            <div className="text-2xl">
-                                                5.14k
-                                            </div>
-                                            <div>视频</div>
-                                        </div>
-                                        <div className=" rounded-lg p-2  shadow">
-                                            <div className="text-2xl">
-                                                104
-                                            </div>
-                                            <div>动态</div>
-                                        </div>
-                                        <div className=" rounded-lg p-2  shadow">
-                                            <div className="text-2xl">
-                                                92k
-                                            </div>
-                                            <div>硬币</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-center mb-4">
-                                        <button className="btn btn-primary">前往个人主页</button>
-                                    </div>
-                                    <div className="text-center mb-6">
-                                        <button className="btn btn-primary">前往直播间</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {isBilibiliLogin?bilibili_profile:bilibili_login}
                         <div className="stats shadow flex flex-col mt-4 rounded-lg">
                             <div className="stat ">
                                 <div className="stat-figure text-secondary ">

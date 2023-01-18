@@ -1,5 +1,8 @@
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 export default function Navbar({}) {
+    const router = useRouter()
+    console.log(router.pathname)
     return (
         <>
             <div id="header" className="header w-full my-4   ">
@@ -8,8 +11,8 @@ export default function Navbar({}) {
                     <a className="btn btn-ghost normal-case text-xl">DeginX</a>
                 </div>
                 <div className="flex-none">
-                    <Link href="/"> <button className="btn  btn-ghost hidden sm:block">主页</button></Link>
-                    <Link href="/tools/index/all"><button className="btn btn-ghost hidden sm:block">工具</button></Link>
+                    <Link href="/"> <button className={`btn  btn-ghost hidden sm:block  ${"/"==router.pathname?"btn-active":""}`}>主页</button></Link>
+                    <Link href="/tools?ItemType=all"><button className={`btn  btn-ghost hidden sm:block  ${"/tools"==router.pathname?"btn-active":""}`}>工具</button></Link>
                     <button className="btn btn-ghost hidden sm:block">插件</button>
                     <button className="btn btn-ghost hidden sm:block">开放平台</button>
                     <button className="btn btn-ghost hidden  sm:block">文档</button>
