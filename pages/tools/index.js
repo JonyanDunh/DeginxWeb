@@ -66,7 +66,10 @@ export default  function Page() {
         return () => {
             router.events.off('routeChangeComplete', handleRouteChange)
         }
-    }, [router.isReady])
+    }, [])
+    useEffect(() => {
+        //alert(router.pathname)
+    }, [router.query])
     if (isLoadingTools||isLoadingLeftMenuItems||!tools||!LeftMenuItems) return <Layout_sticky_navbar
         MenuItems={
             (

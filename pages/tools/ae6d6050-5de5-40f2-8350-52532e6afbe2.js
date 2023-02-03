@@ -4,62 +4,132 @@ import Image from 'next/image'
 import {useState, useEffect} from 'react'
 import {useRouter} from 'next/router'
 import {useQRCode} from 'next-qrcode';
+import Cookies from 'js-cookie'
 
 function getQueryVariable(query, variable) {
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        if (pair[0] == variable) {
+    const vars = query.split("&");
+    for (let i = 0; i < vars.length; i++) {
+        const pair = vars[i].split("=");
+        if (pair[0] === variable) {
             return pair[1];
         }
     }
-    return (false);
+    return false;
+}
+
+function base64ToFile(base64, fileName) {
+    let arr = base64.split(",");
+    let mime = arr[0].match(/:(.*?);/)[1];
+    let bytes = atob(arr[1]);
+    let n = bytes.length;
+    let ia = new Uint8Array(n);
+    while (n--) {
+        ia[n] = bytes.charCodeAt(n);
+    }
+    return new File([ia], fileName, {type: mime});  // 将值抛出去
 }
 
 export default function Page() {
-    const proxy_domain = "http://proxy.deginx.com/release"
+    //const proxy_domain = "https://proxy.deginx.com"
+    const proxy_domain = "/proxy"
     const {Canvas} = useQRCode();
     const [isBilibiliLogin, setBilibiliLogin] = useState(false)
     const [BilibiliLoginQrcode, setBilibiliLoginQrcode] = useState("https://space.bilibili.com/96876893")
     const [SESSDATA, setSESSDATA] = useState("")
     const [bili_jct, setbili_jct] = useState("")
+    const [DedeUserID__ckMd5, setDedeUserID__ckMd5] = useState("")
+    const [BilibiliQrcodeInfo, setBilibiliQrcodeInfo] = useState("正在获取登录二维码...")
+    const [isQrcodeLogin, setQrcodeLogin] = useState(false)
+    const [isBilibiliLoginFail, setBilibiliLoginFail] = useState(false)
+    const [BilibiliLoginFailInfo, setBilibiliLoginFailInfo] = useState("")
+
+
     useEffect(() => {
-        fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginUrl")
-            .then((res) => res.json())
-            .then((data) => {
-                setBilibiliLoginQrcode(data.data.url)
-
-                var CheckScanStatusID = setInterval(() => {
-                    var urlencoded = new URLSearchParams();
-                    urlencoded.append("oauthKey", data.data.oauthKey);
-                    fetch("http://proxy.deginx.com/release/bilibili/passport/qrcode/getLoginInfo", {
-                        method: 'POST',
-                        body: urlencoded
-                    })
-                        .then((res) => res.json())
-                        .then((data) => {
-                            console.log(data)
-                            if (data.status) {
-                                clearInterval(CheckScanStatusID)
-                                var url = data.data.url
-                                setSESSDATA(getQueryVariable(url, "SESSDATA"))
-                                setbili_jct(getQueryVariable(url, "bili_jct"))
-                            }
+        if (Cookies.get("isBilibiliLogin") === "true")
+            setBilibiliLogin(true)
+        else
+            fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginUrl")
+                .then((res) => res.json())
+                .then((data) => {
+                    setBilibiliLoginQrcode(data.data.url)
+                    let time = 0;
+                    const CheckScanStatusID = setInterval(() => {
+                        time++
+                        var urlencoded = new URLSearchParams();
+                        urlencoded.append("oauthKey", data.data.oauthKey);
+                        fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginInfo", {
+                            method: 'POST',
+                            body: urlencoded
                         })
-                }, 1000)
+                            .then((res) => res.json())
+                            .then((data) => {
 
-            })
+                                switch (data.data) {
+                                    case -4:
+                                        setBilibiliQrcodeInfo("请使用哔哩哔哩手机客户端扫码登录");
+                                        break;
+                                    case -5:
+                                        setBilibiliQrcodeInfo("扫码成功,请在手机点击登录");
+                                        break;
+                                }
+                                if (data.status) {
+                                    clearInterval(CheckScanStatusID)
+                                    var url = data.data.url
+                                    setQrcodeLogin(true)
+                                    setSESSDATA(decodeURIComponent(getQueryVariable(url, "SESSDATA")))
+                                    setbili_jct(getQueryVariable(url, "bili_jct"))
+                                    setDedeUserID__ckMd5(getQueryVariable(url, "DedeUserID__ckMd5"))
+                                }
+                                if (time >= 120)
+                                    clearInterval(CheckScanStatusID)
+                            })
+                    }, 1000);
+                    //clearInterval(CheckScanStatusID)
+                })
     }, [])
 
     function BilibiliLoginClickHandler() {
-        setBilibiliLogin(true)
+        //setBilibiliLogin(true)
+        Cookies.set('SESSDATA', SESSDATA, {"path": "/",expires: 365})
+        Cookies.set('bili_jct', bili_jct, {"path": "/",expires: 365})
+        Cookies.set('DedeUserID__ckMd5', DedeUserID__ckMd5, {"path": "/",expires: 365})
+        var formdata = new FormData();
+        formdata.append("bucket", "material_up");
+        formdata.append("dir", "");
+        formdata.append("file", base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"));
+        formdata.append("csrf", bili_jct);
+
+        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+            method: 'POST',
+            mode: 'cors',
+            body: formdata,
+            credentials: 'include',
+            redirect: 'follow'
+        })
+            .then((res) => res.json())
+            .then(data => {
+                if (data.code === 0 || data.code === 20414) {
+                    setBilibiliLogin(true)
+                    setBilibiliLoginFail(false)
+                    Cookies.set('isBilibiliLogin', true, {"path": "/",expires: 365})
+                } else if (data.code === -101) {
+                    setBilibiliLoginFail(true)
+                    setBilibiliLoginFailInfo("SESSDATA填写有误或已过期")
+
+                } else if (data.code === -111) {
+                    setBilibiliLoginFail(true)
+                    setBilibiliLoginFailInfo("bili_jct填写有误或已过期")
+
+                }
+            })
     }
 
     const bilibili_profile = <div className="bilibili_profile  glass w-full sm:w-72 rounded-lg">
         <div className="tabs">
-            <a className="tab-active tab w-1/3 tab-lg tab-lifted font-semibold">资料</a>
-            <a className="tab w-1/3 tab-lg tab-lifted font-semibold">设置</a>
-            <a className="tab w-1/3 tab-lg tab-lifted font-semibold">退出</a>
+
+            <div className="tab-active tab w-1/3 tab-lg tab-lifted font-semibold">资料</div>
+            <div className="tab w-1/3 tab-lg tab-lifted font-semibold">设置</div>
+            <div className="tab w-1/3 tab-lg tab-lifted font-semibold">退出</div>
         </div>
         <div className="tab_content bg-base-100  rounded-b-lg">
             <div className="flex flex-col">
@@ -137,18 +207,64 @@ export default function Page() {
                         </div>
 
                     </div>
+                    {!isQrcodeLogin ?
+                        <div className="alert alert-info shadow-lg">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     className="stroke-current flex-shrink-0 w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <div>{BilibiliQrcodeInfo}</div>
+                                </div>
+                            </div>
 
+                        </div>
+                        :
+                        <div className="alert alert-success shadow-lg">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
+                                     fill="none" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>获取Cookie成功!请点击下方登录!</span>
+                            </div>
+                        </div>
+                    }
                 </div>
                 <div className="divider"></div>
                 <div className="grid flex flex-col gap-4">
                     <div className="text-left text-base font-bold">
                         手动输入Cookie
                     </div>
+                    {isBilibiliLoginFail ? <div className="alert alert-error shadow-lg">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
+                                 fill="none" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>{BilibiliLoginFailInfo}</span>
+                        </div>
+                    </div> : ""}
+
+
                     <div className="grid flex-grow place-items-center gap-4">
-                        <input value={SESSDATA} type="text" placeholder="SESSDATA"
+                        <input value={SESSDATA} onChange={e => {
+                            setSESSDATA(e.currentTarget.value);
+                        }} type="text" placeholder="SESSDATA"
                                className="input input-bordered input-secondary w-full max-w-xs"/>
-                        <input value={bili_jct} type="text" placeholder="bili_jct"
+                        <input value={bili_jct} onChange={e => {
+                            setbili_jct(e.currentTarget.value);
+                        }} type="text" placeholder="bili_jct"
                                className="input input-bordered input-info w-full max-w-xs"/>
+                        <input value={DedeUserID__ckMd5} onChange={e => {
+                            setDedeUserID__ckMd5(e.currentTarget.value);
+                        }} type="text" placeholder="DedeUserID__ckMd5"
+                               className="input input-bordered input-info w-full max-w-xs"/>
+
                         <div className="flex  justify-center">
                             <button onClick={BilibiliLoginClickHandler} className="btn btn-success ">登录账号</button>
                         </div>
@@ -241,7 +357,7 @@ export default function Page() {
                                         </div>
                                         <div className="flex  justify-center">
                                             <select className="select select-secondary w-full max-w-xs">
-                                                <option disabled selected>选择一个视频</option>
+                                                <option disabled>选择一个视频</option>
                                             </select>
                                         </div>
                                         <div className="flex  justify-center">
@@ -266,7 +382,7 @@ export default function Page() {
                                         </div>
                                         <div className="flex  justify-center">
                                             <select className="select select-secondary w-full max-w-xs">
-                                                <option disabled selected>选择一篇文章</option>
+                                                <option disabled>选择一篇文章</option>
                                             </select>
                                         </div>
                                         <div className="flex  justify-center">
