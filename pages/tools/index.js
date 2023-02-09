@@ -117,7 +117,7 @@ export default  function Page() {
                                 <div className="sm:text-xl font-bold text-center line-clamp-1">{tool.map.ItemName}</div>
                                 <div className="line-clamp-2 sm:text-center">{tool.map.ItemDescribe}</div>
                                 <div className="card-actions justify-center ">
-                                    <Link  href={`/tools/${tool.map.ItemUUID}`}>
+                                    <Link  href={`/tools/${tool.map.ItemShortName}`}>
                                         <button disabled={tool.map.disabled} className="btn btn-primary ">立即使用
                                         </button>
                                     </Link>
