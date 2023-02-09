@@ -8,7 +8,7 @@ export default function App({ Component, pageProps }) {
         <>
             <Head>
                 <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-                <title>My new cool app</title>
+                <title>DeginX</title>
                 <meta name="referrer" content="no-referrer" />
             </Head>
             <Component {...pageProps} />

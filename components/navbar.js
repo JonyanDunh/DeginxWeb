@@ -11,12 +11,12 @@ export default function Navbar({}) {
                 </div>
                 <div className="flex-none">
                     <Link href="/"> <button className={`btn  btn-ghost hidden sm:block  ${"/"==router.pathname?"btn-active":""}`}>主页</button></Link>
-                    <Link href="/tools?ItemType=all"><button className={`btn  btn-ghost hidden sm:block  ${"/tools"==router.pathname?"btn-active":""}`}>工具</button></Link>
-                    <button className="btn btn-ghost hidden sm:block">插件</button>
-                    <button className="btn btn-ghost hidden sm:block">开放平台</button>
-                    <button className="btn btn-ghost hidden  sm:block">文档</button>
-                    <button className="btn btn-ghost hidden sm:block">关于</button>
-                    <div className="dropdown dropdown-end">
+                    <Link href="/tools?ItemType=all"><button className={`btn  btn-ghost sm:block  ${"/tools"==router.pathname?"btn-active":""}`}>工具</button></Link>
+                    <button className="btn btn-ghost hidden ">插件</button>
+                    <button className="btn btn-ghost hidden ">开放平台</button>
+                    <button className="btn btn-ghost hidden  ">文档</button>
+                    <button className="btn btn-ghost hidden ">关于</button>
+                    <div className="dropdown dropdown-end hidden">
                         <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                             <div className="w-10 rounded-full">
                                 <img src="https://i2.hdslb.com/bfs/face/dfc20ec4a6e62d1604d55be06ce4ff6977a6e8dc.png"/>

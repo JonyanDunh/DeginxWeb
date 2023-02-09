@@ -6,7 +6,7 @@ import {useRouter} from 'next/router'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 
-var URL = require('url');
+var UrlDecode = require('url');
 
 function base64ToFile(base64, fileName) {
     let arr = base64.split(",");
@@ -21,8 +21,8 @@ function base64ToFile(base64, fileName) {
 }
 
 export default function Page() {
-    const proxy_domain = "https://proxy.deginx.com"
-    //const proxy_domain = "/proxy"
+    //const proxy_domain = "https://proxy.deginx.com"
+    const proxy_domain = "/proxy"
     const {Canvas} = useQRCode();
     const [isBiliLogin, setBiliLogin] = useState(false)
     const [isConfirmedRule, setConfirmedRule] = useState(false)
@@ -175,6 +175,18 @@ export default function Page() {
             }
         )
     }
+    const BiliArticleCoverLoader = () => {
+        return BiliArticleCover
+    }
+    const BiliLiveroomCoverLoader = () => {
+        return BiliLiveroomCover
+    }
+    const BiliLiveroomCoverVerticalLoader = () => {
+        return BiliLiveroomCoverVertical
+    }
+    const BiliLiveroomShowCoverLoader = () => {
+        return BiliLiveroomShowCover
+    }
 
     useEffect(() => {
         fetch("http://proxy.deginx.com/bilibili/tools/UserCounts/", {
@@ -218,7 +230,7 @@ export default function Page() {
                                 }
                                 if (data.status) {
                                     clearInterval(CheckScanStatusID)
-                                    var url = URL.parse(data.data.url, true)
+                                    var url = UrlDecode.parse(data.data.url, true)
                                     setQrcodeLogin(true)
                                     setSESSDATA(url.query.SESSDATA)
                                     setbili_jct(url.query.bili_jct)
@@ -574,6 +586,7 @@ export default function Page() {
                                     <div className="grid flex-grow place-items-center ">
                                         <div className="rounded-lg relative  overflow-hidden w-72 h-48 ">
                                             <Image fill
+                                                   loader={BiliArticleCoverLoader}
                                                    src={BiliArticleCover}/>
                                         </div>
                                     </div>
@@ -669,6 +682,7 @@ export default function Page() {
                                         <div className="grid flex-grow place-items-center">
                                             <div className="rounded-lg relative  overflow-hidden w-72 h-48 ">
                                                 <Image fill
+                                                       loader={BiliLiveroomCoverLoader}
                                                        src={BiliLiveroomCover}/>
                                             </div>
                                         </div>
@@ -750,6 +764,7 @@ export default function Page() {
                                         <div className="grid flex-grow place-items-center">
                                             <div className="rounded-lg relative  overflow-hidden w-48 h-48 ">
                                                 <Image fill
+                                                       loader={BiliLiveroomShowCoverLoader}
                                                        src={BiliLiveroomShowCover}/>
                                             </div>
                                         </div>
@@ -828,6 +843,7 @@ export default function Page() {
                                         <div className="grid flex-grow place-items-center">
                                             <div className="rounded-lg relative  overflow-hidden w-48 h-72 ">
                                                 <Image fill
+                                                       loader={BiliLiveroomCoverVerticalLoader}
                                                        src={BiliLiveroomCoverVertical}/>
                                             </div>
                                         </div>

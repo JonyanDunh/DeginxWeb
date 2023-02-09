@@ -32,13 +32,13 @@ export default  function Page() {
         setLoadingTools(true)
         setLoadingLeftMenuItems(true)
         setthisItemType(ItemType)
-        fetch('http://127.0.0.1:8000/api/tools/get/'+ItemType)
+        fetch('https://api.deginx.com/tools/get/'+ItemType)
             .then((res) => res.json())
             .then((data) => {
                 settools(data)
                 setLoadingTools(false)
             })
-        fetch('http://127.0.0.1:8000/api/tools/get_item_type')
+        fetch('https://api.deginx.com/tools/get_item_type')
             .then((res) => res.json())
             .then((data) => {
                 let LeftMenuItems = []
