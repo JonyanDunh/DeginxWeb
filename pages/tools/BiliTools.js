@@ -5,7 +5,9 @@ import React, {useState, useEffect} from 'react'
 import {useRouter} from 'next/router'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
-var URL= require('url');
+
+var URL = require('url');
+
 function base64ToFile(base64, fileName) {
     let arr = base64.split(",");
     let mime = arr[0].match(/:(.*?);/)[1];
@@ -19,10 +21,11 @@ function base64ToFile(base64, fileName) {
 }
 
 export default function Page() {
-    //const proxy_domain = "https://proxy.deginx.com"
-    const proxy_domain = "/proxy"
+    const proxy_domain = "https://proxy.deginx.com"
+    //const proxy_domain = "/proxy"
     const {Canvas} = useQRCode();
     const [isBiliLogin, setBiliLogin] = useState(false)
+    const [isConfirmedRule, setConfirmedRule] = useState(false)
     const [BiliLoginQrcode, setBiliLoginQrcode] = useState("https://space.bilibili.com/96876893")
     const [SESSDATA, setSESSDATA] = useState("")
     const [bili_jct, setbili_jct] = useState("")
@@ -33,18 +36,18 @@ export default function Page() {
     const [isBiliLoginFail, setBiliLoginFail] = useState(false)
     const [BiliLoginFailInfo, setBiliLoginFailInfo] = useState("")
     const [BiliUserName, setBiliUserName] = useState("")
-    const [BiliUserFace, setBiliUserFace] = useState("https://i0.hdslb.com/bfs/album/201a6b9199e4c5fb2f49e6e3a4730899d125ae97.gif")
+    const [BiliUserFace, setBiliUserFace] = useState("https://message.biliimg.com/bfs/im/b250a43ce7293027f7e76d2895f89092d0d61379.gif")
     const [BiliUid, setBiliUid] = useState("")
     const [BiliCoins, setBiliCoins] = useState("")
     const [BiliFollowers, setBiliFollowers] = useState("")
     const [BiliFollowings, setBiliFollowings] = useState("")
     const [BiliDynamics, setBiliDynamics] = useState("")
     const [BiliLiveroom, setBiliLiveroom] = useState("")
-    const [BiliLiveroomCover, setBiliLiveroomCover] = useState("https://message.biliimg.com/bfs/im/4bd450bbdce34d5e9fee7182a0b2be446ed0cf53.webp")
-    const [BiliLiveroomCoverVertical, setBiliLiveroomCoverVertical] = useState("https://message.biliimg.com/bfs/im/81c0759d3c2d79b14709d33e863d168d13365fd1.webp")
-    const [BiliLiveroomShowCover, setBiliLiveroomShowCover] = useState("https://message.biliimg.com/bfs/im/81c0759d3c2d79b14709d33e863d168d13365fd1.webp")
+    const [BiliLiveroomCover, setBiliLiveroomCover] = useState("https://i0.hdslb.com/bfs/album/07a048755d28c6244c16f5cb1094773e8ec612e2.webp")
+    const [BiliLiveroomCoverVertical, setBiliLiveroomCoverVertical] = useState("https://message.biliimg.com/bfs/im/b250a43ce7293027f7e76d2895f89092d0d61379.gif")
+    const [BiliLiveroomShowCover, setBiliLiveroomShowCover] = useState("https://message.biliimg.com/bfs/im/b250a43ce7293027f7e76d2895f89092d0d61379.gif")
     const [BiliArticles, setBiliArticles] = useState([])
-    const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/album/a005667d57c15f94f6d7bbcee9999f4300bced69.webp");
+    const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/album/07a048755d28c6244c16f5cb1094773e8ec612e2.webp");
     const [BiliSelectedArticle, setBiliSelectedArticle] = useState(0);
     const NewBiliArticleCoverFileRef = React.useRef();
     const NewBiliLiveroomCoverFileRef = React.useRef();
@@ -53,7 +56,15 @@ export default function Page() {
     const NewBiliUserFaceFileRef = React.useRef();
     const [BiliToolsUserCounts, setBiliToolsUserCounts] = useState(0);
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
+    const AlertRef = React.useRef();
 
+    // function Alert(message, type) {
+    //
+    //     //AlertRef.current.innerHTML += `<div onClick={(e) => {e.target.remove()}} className="alert alert-success">{message}</div>`;
+    //     //AlertRef.current += `<div onClick={(e) => {e.target.remove()}} className="alert alert-success">{message}</div>`
+    //     console.log(AlertRef.current)
+    // }
+    // Alert(1)
     function updateBiliInfo() {
         fetch(proxy_domain + "/bilibili/api/x/space/myinfo", {
             method: 'GET',
@@ -90,7 +101,7 @@ export default function Page() {
             .then(response => response.json())
             .then(result => {
                 setBiliLiveroom(result.data.room_id)
-                fetch(proxy_domain + "/bilibili/api/live/room/v1/Cover/get_list?room_id="+result.data.room_id+"&type=show", {
+                fetch(proxy_domain + "/bilibili/api/live/room/v1/Cover/get_list?room_id=" + result.data.room_id + "&type=show", {
                     method: 'GET',
                     redirect: 'follow',
                     mode: 'cors',
@@ -151,16 +162,16 @@ export default function Page() {
                     credentials: 'include'
                 })
 
-            var formdata = new FormData();
-            formdata.append("aid", aid);
-            formdata.append("played_time", Math.round(Math.random() * (40 -10)) + 10);
-            fetch(proxy_domain + "/bilibili/api/x/click-interface/web/heartbeat", {
-                method: 'POST',
-                body: formdata,
-                mode: 'cors',
-                redirect: 'follow',
-                credentials: 'include'
-            })
+                var formdata = new FormData();
+                formdata.append("aid", aid);
+                formdata.append("played_time", Math.round(Math.random() * (40 - 10)) + 10);
+                fetch(proxy_domain + "/bilibili/api/x/click-interface/web/heartbeat", {
+                    method: 'POST',
+                    body: formdata,
+                    mode: 'cors',
+                    redirect: 'follow',
+                    credentials: 'include'
+                })
             }
         )
     }
@@ -264,9 +275,15 @@ export default function Page() {
     const bilibili_profile = <div className="bilibili_profile  glass w-full sm:w-72 rounded-lg">
         <div className="tabs">
 
-            <div onClick={()=>{setBiliInfoTab(0)}} className={`${BiliInfoTab==0?"tab-active":""} tab w-1/2 tab-lg tab-lifted font-semibold`}>资料</div>
+            <div onClick={() => {
+                setBiliInfoTab(0)
+            }} className={`${BiliInfoTab == 0 ? "tab-active" : ""} tab w-1/2 tab-lg tab-lifted font-semibold`}>资料
+            </div>
             {/*<div onClick={()=>{setBiliInfoTab(1)}} className={`${BiliInfoTab==1?"tab-active":""} tab w-1/3 tab-lg tab-lifted font-semibold`}>设置</div>*/}
-            <div onClick={()=>{setBiliInfoTab(1)}} className={`${BiliInfoTab==1?"tab-active":""} tab w-1/2 tab-lg tab-lifted font-semibold`}>退出</div>
+            <div onClick={() => {
+                setBiliInfoTab(1)
+            }} className={`${BiliInfoTab == 1 ? "tab-active" : ""} tab w-1/2 tab-lg tab-lifted font-semibold`}>退出
+            </div>
         </div>
         <div className={` tab_content bg-base-100  rounded-b-lg`}>
             <div className="flex flex-col">
@@ -282,55 +299,55 @@ export default function Page() {
                         className="text-center font-semibold badge badge-primary badge-outline">uid:{BiliUid}
                     </div>
                 </div>
-                <div className={BiliInfoTab==0?"":"hidden"}>
-                <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
-                    <div className=" rounded-lg p-2  shadow">
-                        <div className="text-2xl">
-                            {BiliFollowers}
+                <div className={BiliInfoTab == 0 ? "" : "hidden"}>
+                    <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
+                        <div className=" rounded-lg p-2  shadow">
+                            <div className="text-2xl">
+                                {BiliFollowers}
+                            </div>
+                            <div>粉丝</div>
                         </div>
-                        <div>粉丝</div>
+                        <div className=" rounded-lg p-2  shadow">
+                            <div className="text-2xl">
+                                {BiliFollowings}
+                            </div>
+                            <div>关注</div>
+                        </div>
+                        <div className=" rounded-lg p-2  shadow">
+                            <div className="text-2xl">
+                                {BiliDynamics}
+                            </div>
+                            <div>动态</div>
+                        </div>
+                        <div className=" rounded-lg p-2  shadow">
+                            <div className="text-2xl">
+                                {BiliCoins}
+                            </div>
+                            <div>硬币</div>
+                        </div>
                     </div>
-                    <div className=" rounded-lg p-2  shadow">
-                        <div className="text-2xl">
-                            {BiliFollowings}
-                        </div>
-                        <div>关注</div>
+                    <div className="text-center mb-4">
+                        <a href={"https://space.bilibili.com/" + BiliUid} target="_blank" className="btn btn-primary"
+                           rel="noreferrer">前往个人主页</a>
                     </div>
-                    <div className=" rounded-lg p-2  shadow">
-                        <div className="text-2xl">
-                            {BiliDynamics}
-                        </div>
-                        <div>动态</div>
-                    </div>
-                    <div className=" rounded-lg p-2  shadow">
-                        <div className="text-2xl">
-                            {BiliCoins}
-                        </div>
-                        <div>硬币</div>
+                    <div className="text-center mb-6">
+                        <a href={"https://live.bilibili.com/" + BiliLiveroom} target="_blank"
+                           className="btn btn-primary" rel="noreferrer">前往直播页面</a>
                     </div>
                 </div>
-                <div className="text-center mb-4">
-                    <a href={"https://space.bilibili.com/" + BiliUid} target="_blank" className="btn btn-primary"
-                       rel="noreferrer">前往个人主页</a>
-                </div>
-                <div className="text-center mb-6">
-                    <a href={"https://live.bilibili.com/" + BiliLiveroom} target="_blank"
-                       className="btn btn-primary" rel="noreferrer">前往直播页面</a>
-                </div>
-                </div>
-                <div className={BiliInfoTab==1?"":"hidden"}>
+                <div className={BiliInfoTab == 1 ? "" : "hidden"}>
                     <div className="text-center m-6">
-                        <a onClick={()=>{
-                            Cookies.remove("SESSDATA",{"path": "/"})
-                            Cookies.remove("bili_jct",{"path": "/"})
-                            Cookies.remove("isBiliLogin",{"path": "/"})
-                            Cookies.remove("DedeUserID__ckMd5",{"path": "/"})
+                        <a onClick={() => {
+                            Cookies.remove("SESSDATA", {"path": "/"})
+                            Cookies.remove("bili_jct", {"path": "/"})
+                            Cookies.remove("isBiliLogin", {"path": "/"})
+                            Cookies.remove("DedeUserID__ckMd5", {"path": "/"})
                             window.location.reload()
-                        }}  target="_blank" className="btn btn-warning"
+                        }} target="_blank" className="btn btn-warning"
                            rel="noreferrer">仅清除Cookie</a>
                     </div>
                     <div className="text-center mb-6">
-                        <a onClick={()=>{
+                        <a onClick={() => {
                             var urlencoded = new URLSearchParams();
                             urlencoded.append("biliCSRF", bili_jct);
                             var requestOptions = {
@@ -344,11 +361,11 @@ export default function Page() {
                             fetch(proxy_domain + "/bilibili/passport/login/exit/v2", requestOptions)
                                 .then(response => response.json())
                                 .then(result => {
-                                    if (result.code===0){
-                                        Cookies.remove("SESSDATA",{"path": "/"})
-                                        Cookies.remove("bili_jct",{"path": "/"})
-                                        Cookies.remove("isBiliLogin",{"path": "/"})
-                                        Cookies.remove("DedeUserID__ckMd5",{"path": "/"})
+                                    if (result.code === 0) {
+                                        Cookies.remove("SESSDATA", {"path": "/"})
+                                        Cookies.remove("bili_jct", {"path": "/"})
+                                        Cookies.remove("isBiliLogin", {"path": "/"})
+                                        Cookies.remove("DedeUserID__ckMd5", {"path": "/"})
                                         window.location.reload()
                                     }
                                 })
@@ -379,8 +396,8 @@ export default function Page() {
                                     scale: 3,
                                     width: 4,
                                     color: {
-                                        dark: '#010599FF',
-                                        light: '#FFBF60FF',
+                                        dark: '#f643c9',
+                                        light: '#1ed5d5',
                                     },
                                 }}
                             />
@@ -450,7 +467,18 @@ export default function Page() {
                                className="input input-bordered input-info w-full max-w-xs"/>
 
                         <div className="flex  justify-center">
-                            <button onClick={BiliLoginClickHandler} className="btn btn-success ">登录账号</button>
+                            <button disabled={!isConfirmedRule} onClick={BiliLoginClickHandler}
+                                    className="btn btn-success ">登录账号
+                            </button>
+                        </div>
+                        <div className="form-control">
+                            <label className="cursor-pointer label text-center">
+                                <span
+                                    className="label-text mr-4 font-bold">已确保我已阅读用户须知<br/>并接受全部内容</span>
+                                <input onChangeCapture={(e) => {
+                                    setConfirmedRule(e.target.checked)
+                                }} checked={isConfirmedRule} type="checkbox" className="checkbox checkbox-error"/>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -517,101 +545,109 @@ export default function Page() {
                                 <span>此工具箱为内测版，功能可能存在不稳定，敬请原谅</span>
                             </div>
                         </div>
-                        <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4">
-                            <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow">
+                        <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
+                            <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow  ">
                                 <div className="text-xl font-bold ">用户须知</div>
-
-                            </div>
-                            <div className=" md:col-span-1 bg-base-100 rounded-lg  p-4 shadow ">
-                                <div className="text-xl font-bold ">投稿动态封面上传</div>
                                 <div className="flex flex-col sm:flex-row w-full mt-4 ">
                                     <div
                                         className=" flex flex-col sm:w-1/3 relative rounded-lg flex-grow overflow-hidden justify-center gap-4 ">
-                                        <div className="text-center text-base font-bold">
-                                            专栏封面
+                                        <div className="text-left text-base ">
+                                            1.如果使用我们的网站，将视为同意我们和我们的第三方服务提供商在您的计算机上设置Cookie。
                                         </div>
-                                        <div className="grid flex-grow place-items-center">
-                                            <div className="rounded-lg relative  overflow-hidden w-72 h-48 ">
-                                                <Image fill
-                                                       src={BiliArticleCover}/>
-                                            </div>
+                                        <div className="text-left text-base ">
+                                            2.除非为了特定的活动或基于本网站不时增加的特定功能，本网站不会主动收集您的个人信息。如果在上述情况下收集个人信息，这些个人信息将会仅用于特定且有限的目的。个人信息一经收集后，若未经您的同意，将不会用于明示目的之外的其他目的。
                                         </div>
-                                        <div className="flex  justify-center">
-                                            <button disabled onClick={(e) => {
-                                                NewBiliArticleCoverFileRef.current.click();
-                                            }} className="btn btn-warning  ">选择图片
-                                            </button>
+                                        <div className="text-left text-base ">
+                                            3.本网站不会记录任何<a className="link link-secondary" href="https://www.bilibili.com/">哔哩哔哩</a>网站的Cookie，但会记录用户的Uid、用户名、粉丝数等信息用来统计工具使用人数。
                                         </div>
-                                        <div className="flex  justify-center">
-                                            <input hidden
-                                                   type="file"
-                                                   ref={NewBiliArticleCoverFileRef}
-                                                   onChangeCapture={(e) => {
-                                                       setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
-                                                   }}
-                                            />
-                                            <select value={BiliSelectedArticle}
-                                                    onChange={(e) => {
-                                                        console.log(BiliArticles[e.target.value])
-                                                        setBiliArticleCover(BiliArticles[e.target.value].image_urls[0]);
-                                                        setBiliSelectedArticle(e.target.value)
-                                                    }} className="select select-secondary w-full max-w-xs">
-                                                <option disabled>请选择一个专栏</option>
-                                                {BiliArticles.map((item, index) => (
-                                                        <option value={index} key={index}>{item.title}</option>
-                                                    )
-                                                )}
-                                            </select>
-                                        </div>
-                                        <div className="flex  justify-center">
-                                            <button disabled onClick={(e) => {
-
-                                                var formdata = new FormData();
-                                                formdata.append("bucket", "material_up");
-                                                formdata.append("dir", "");
-                                                formdata.append("file", NewBiliArticleCoverFileRef.current.files[0]);
-                                                formdata.append("csrf", bili_jct);
-
-                                                fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                    method: 'POST',
-                                                    mode: 'cors',
-                                                    body: formdata,
-                                                    credentials: 'include',
-                                                    redirect: 'follow'
-                                                })
-                                                    .then((res) => res.json())
-                                                    .then(data => {
-                                                        if (data.code === 0 || data.code === 20414) {
-                                                            //data.data.location
-
-                                                        } else if (data.code === -101) {
-                                                            alert("SESSDATA填写有误或已过期")
-
-                                                        } else if (data.code === -111) {
-                                                            alert("bili_jct填写有误或已过期")
-                                                        }
-
-                                                    })
-                                            }} className="btn btn-success">上传图片
-                                            </button>
+                                        <div className="text-left text-base font-bold ">
+                                            *4.本工具在用哔哩哔哩账号登录之时，会自动关注UP主<a className="link link-accent" href="https://space.bilibili.com/96876893">JONYANDUNH</a>，并且扣除10枚硬币投给UP主的5个视频。(毕竟是用爱发电嘛(～￣▽￣)～)
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            <div className="grid md:col-span-1 bg-base-100 rounded-lg  p-4 shadow ">
+                                <div className="text-xl font-bold ">专栏动态封面上传</div>
+                                <div
+                                    className="flex  flex-col w-full relative rounded-lg flex-grow overflow-hidden justify-center gap-4 mt-4 ">
 
+                                    <div className="grid flex-grow place-items-center ">
+                                        <div className="rounded-lg relative  overflow-hidden w-72 h-48 ">
+                                            <Image fill
+                                                   src={BiliArticleCover}/>
+                                        </div>
+                                    </div>
+                                    <div className="flex  justify-center">
+                                        <button disabled onClick={(e) => {
+                                            NewBiliArticleCoverFileRef.current.click();
+                                        }} className="btn btn-warning  ">选择图片
+                                        </button>
+                                    </div>
+                                    <div className="flex  justify-center">
+                                        <input hidden
+                                               type="file"
+                                               ref={NewBiliArticleCoverFileRef}
+                                               onChangeCapture={(e) => {
+                                                   setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
+                                               }}
+                                        />
+                                        <select value={BiliSelectedArticle}
+                                                onChange={(e) => {
+                                                    console.log(BiliArticles[e.target.value])
+                                                    setBiliArticleCover(BiliArticles[e.target.value].image_urls[0]);
+                                                    setBiliSelectedArticle(e.target.value)
+                                                }} className="select select-secondary w-full max-w-xs">
+                                            <option disabled>请选择一个专栏</option>
+                                            {BiliArticles.map((item, index) => (
+                                                    <option value={index} key={index}>{item.title}</option>
+                                                )
+                                            )}
+                                        </select>
+                                    </div>
+                                    <div className="flex  justify-center">
+                                        <button disabled onClick={(e) => {
 
+                                            var formdata = new FormData();
+                                            formdata.append("bucket", "material_up");
+                                            formdata.append("dir", "");
+                                            formdata.append("file", NewBiliArticleCoverFileRef.current.files[0]);
+                                            formdata.append("csrf", bili_jct);
+
+                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                                method: 'POST',
+                                                mode: 'cors',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow'
+                                            })
+                                                .then((res) => res.json())
+                                                .then(data => {
+                                                    if (data.code === 0 || data.code === 20414) {
+                                                        //data.data.location
+
+                                                    } else if (data.code === -101) {
+                                                        alert("SESSDATA填写有误或已过期")
+
+                                                    } else if (data.code === -111) {
+                                                        alert("bili_jct填写有误或已过期")
+                                                    }
+
+                                                })
+                                        }} className="btn btn-success">上传图片
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow">
                                 <div className="text-xl font-bold ">自定义头像上传</div>
                                 <div
-                                    className=" flex  flex-col w-full relative rounded-lg flex-grow overflow-hidden justify-center gap-4 mt-4">
-
-                                    <div className="grid flex-grow place-items-center">
+                                    className="flex flex-col w-full relative rounded-lg flex-grow overflow-hidden justify-center gap-4 mt-4">
+                                    <div className="avatar grid flex-grow place-items-center">
                                         <div className="rounded-lg relative  overflow-hidden w-48 h-48 ">
                                             <img fill
                                                  src={BiliUserFace}/>
                                         </div>
                                     </div>
-
                                     <div className="flex  justify-center gap-4">
                                         <div>
                                             <button disabled className="btn btn-warning  ">选择图片</button>
@@ -620,9 +656,7 @@ export default function Page() {
                                             <button disabled className="btn btn-success   ">上传图片</button>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                             <div className=" sm:col-span-3 bg-base-100 rounded-lg p-4 shadow ">
                                 <div className="text-xl font-bold ">直播间动态封面上传</div>
@@ -868,10 +902,11 @@ export default function Page() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div ref={AlertRef} className="toast toast-end">
 
 
                         </div>
-
                     </div>
 
                 )}
