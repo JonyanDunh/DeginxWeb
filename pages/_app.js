@@ -10,6 +10,7 @@ export default function App({ Component, pageProps }) {
                 <meta name="viewport" content="initial-scale=1.0, width=device-width" />
                 <title>DeginX</title>
                 <meta name="referrer" content="no-referrer" />
+                <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
             </Head>
             <Component {...pageProps} />
         </>

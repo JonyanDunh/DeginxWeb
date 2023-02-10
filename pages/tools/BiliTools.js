@@ -21,9 +21,12 @@ function base64ToFile(base64, fileName) {
 }
 
 export default function Page() {
-    //const proxy_domain = "https://proxy.deginx.com"
-    const proxy_domain = "/proxy"
+    const proxy_domain = "https://proxy.deginx.com"
+    //const proxy_domain = "/proxy"
     const {Canvas} = useQRCode();
+    const [isAlertModalShowed, setAlertModalShowed] = useState(false)
+    const [AlertModalInfo, setAlertModalInfo] = useState("")
+    const [AlertModalTitle, setAlertModalTitle] = useState("")
     const [isBiliLogin, setBiliLogin] = useState(false)
     const [isConfirmedRule, setConfirmedRule] = useState(false)
     const [BiliLoginQrcode, setBiliLoginQrcode] = useState("https://space.bilibili.com/96876893")
@@ -32,6 +35,7 @@ export default function Page() {
     const [DedeUserID, setDedeUserID] = useState("")
     const [DedeUserID__ckMd5, setDedeUserID__ckMd5] = useState("")
     const [BiliQrcodeInfo, setBiliQrcodeInfo] = useState("正在获取登录二维码...")
+    const [isQrcodeFailed, setQrcodeFailed] = useState(false)
     const [isQrcodeLogin, setQrcodeLogin] = useState(false)
     const [isBiliLoginFail, setBiliLoginFail] = useState(false)
     const [BiliLoginFailInfo, setBiliLoginFailInfo] = useState("")
@@ -65,6 +69,14 @@ export default function Page() {
     //     console.log(AlertRef.current)
     // }
     // Alert(1)
+    function clearCookie() {
+        Cookies.remove("SESSDATA", {"path": "/"})
+        Cookies.remove("bili_jct", {"path": "/"})
+        Cookies.remove("isBiliLogin", {"path": "/"})
+        Cookies.remove("DedeUserID__ckMd5", {"path": "/"})
+        window.location.reload()
+    }
+
     function updateBiliInfo() {
         fetch(proxy_domain + "/bilibili/api/x/space/myinfo", {
             method: 'GET',
@@ -175,6 +187,7 @@ export default function Page() {
             }
         )
     }
+
     const BiliArticleCoverLoader = () => {
         return BiliArticleCover
     }
@@ -200,9 +213,30 @@ export default function Page() {
                 setBiliToolsUserCounts(result.data.counts)
             })
         if (Cookies.get("isBiliLogin") === "true") {
-            setbili_jct(Cookies.get("bili_jct"))
-            setBiliLogin(true)
-            updateBiliInfo()
+
+            var formdata = new FormData();
+            formdata.append("bucket", "material_up");
+            formdata.append("dir", "");
+            formdata.append("file", base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"));
+            formdata.append("csrf", Cookies.get("bili_jct"));
+
+            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                method: 'POST',
+                mode: 'cors',
+                body: formdata,
+                credentials: 'include',
+                redirect: 'follow'
+            })
+                .then((res) => res.json())
+                .then(data => {
+                    if (data.code === 0 || data.code === 20414) {
+                        setbili_jct(Cookies.get("bili_jct"))
+                        setBiliLogin(true)
+                        updateBiliInfo()
+                    }else
+                        clearCookie()
+                })
+
         } else
             fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginUrl")
                 .then((res) => res.json())
@@ -237,14 +271,16 @@ export default function Page() {
                                     setDedeUserID(url.query.DedeUserID)
                                     setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
                                 }
-                                if (time >= 120)
+                                if (time >= 90) {
+                                    setQrcodeFailed(true)
                                     clearInterval(CheckScanStatusID)
+                                }
+
                             })
                     }, 1000);
                     //clearInterval(CheckScanStatusID)
                 })
     }, [])
-
 
     function BiliLoginClickHandler() {
         //setBiliLogin(true)
@@ -252,6 +288,7 @@ export default function Page() {
         Cookies.set('bili_jct', bili_jct, {"path": "/", expires: 365})
         Cookies.set('DedeUserID', DedeUserID, {"path": "/", expires: 365})
         Cookies.set('DedeUserID__ckMd5', DedeUserID__ckMd5, {"path": "/", expires: 365})
+
         var formdata = new FormData();
         formdata.append("bucket", "material_up");
         formdata.append("dir", "");
@@ -349,13 +386,7 @@ export default function Page() {
                 </div>
                 <div className={BiliInfoTab == 1 ? "" : "hidden"}>
                     <div className="text-center m-6">
-                        <a onClick={() => {
-                            Cookies.remove("SESSDATA", {"path": "/"})
-                            Cookies.remove("bili_jct", {"path": "/"})
-                            Cookies.remove("isBiliLogin", {"path": "/"})
-                            Cookies.remove("DedeUserID__ckMd5", {"path": "/"})
-                            window.location.reload()
-                        }} target="_blank" className="btn btn-warning"
+                        <a onClick={clearCookie} target="_blank" className="btn btn-warning"
                            rel="noreferrer">仅清除Cookie</a>
                     </div>
                     <div className="text-center mb-6">
@@ -374,11 +405,7 @@ export default function Page() {
                                 .then(response => response.json())
                                 .then(result => {
                                     if (result.code === 0) {
-                                        Cookies.remove("SESSDATA", {"path": "/"})
-                                        Cookies.remove("bili_jct", {"path": "/"})
-                                        Cookies.remove("isBiliLogin", {"path": "/"})
-                                        Cookies.remove("DedeUserID__ckMd5", {"path": "/"})
-                                        window.location.reload()
+                                        clearCookie()
                                     }
                                 })
                         }} target="_blank"
@@ -398,49 +425,61 @@ export default function Page() {
                         二维码获取Cookie
                     </div>
                     <div className="grid flex-grow place-items-center">
-                        <div className="rounded-lg relative  overflow-hidden  ">
-                            {/*<Image fill*/}
-                            {/*       src="https://message.biliimg.com/bfs/im/703dec6333b348170b705355be9eb8b52654e236.png"/>*/}
+                        <div
+                            className={`rounded-lg relative  overflow-hidden ${isQrcodeFailed ? "filter blur-lg" : ""} `}>
                             <Canvas
                                 text={BiliLoginQrcode}
                                 options={{
                                     level: 'H',
-                                    scale: 3,
+                                    scale: 4,
                                     width: 4,
                                     color: {
-                                        dark: '#f643c9',
-                                        light: '#1ed5d5',
+                                        dark: '#ff6b81',
+                                        light: '#dff9fb',
                                     },
                                 }}
                             />
                         </div>
 
                     </div>
-                    {!isQrcodeLogin ?
-                        <div className="alert alert-info shadow-lg">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     className="stroke-current flex-shrink-0 w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                    {!isQrcodeFailed ? <div>
+                        {!isQrcodeLogin ?
+                            <div className="alert alert-info shadow-lg">
                                 <div>
-                                    <div>{BiliQrcodeInfo}</div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                         className="stroke-current flex-shrink-0 w-6 h-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <div>{BiliQrcodeInfo}</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            :
+                            <div className="alert alert-success shadow-lg">
+                                <div>
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         className="stroke-current flex-shrink-0 h-6 w-6"
+                                         fill="none" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>获取Cookie成功!请点击下方登录!</span>
                                 </div>
                             </div>
-
+                        }
+                    </div> : <div className="alert alert-error shadow-lg">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
+                                 fill="none" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>二维码已过期，请刷新网页！</span>
                         </div>
-                        :
-                        <div className="alert alert-success shadow-lg">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
-                                     fill="none" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>获取Cookie成功!请点击下方登录!</span>
-                            </div>
-                        </div>
+                    </div>
                     }
                 </div>
                 <div className="divider"></div>
@@ -558,7 +597,8 @@ export default function Page() {
                             </div>
                         </div>
                         <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
-                            <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow  ">
+                            <div
+                                className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow overflow-scroll max-h-128">
                                 <div className="text-xl font-bold ">用户须知</div>
                                 <div className="flex flex-col sm:flex-row w-full mt-4 ">
                                     <div
@@ -570,16 +610,42 @@ export default function Page() {
                                             2.除非为了特定的活动或基于本网站不时增加的特定功能，本网站不会主动收集您的个人信息。如果在上述情况下收集个人信息，这些个人信息将会仅用于特定且有限的目的。个人信息一经收集后，若未经您的同意，将不会用于明示目的之外的其他目的。
                                         </div>
                                         <div className="text-left text-base ">
-                                            3.本网站不会记录任何<a className="link link-secondary" href="https://www.bilibili.com/">哔哩哔哩</a>网站的Cookie，但会记录用户的Uid、用户名、粉丝数等信息用来统计工具使用人数。
+                                            3.本网站不会记录任何<a className="link link-secondary"
+                                                                   href="https://www.bilibili.com/">哔哩哔哩</a>网站的Cookie，但会记录用户的Uid、用户名、粉丝数等信息用来统计工具使用人数。
                                         </div>
                                         <div className="text-left text-base font-bold ">
-                                            *4.本工具在用哔哩哔哩账号登录之时，会自动关注UP主<a className="link link-accent" href="https://space.bilibili.com/96876893">JONYANDUNH</a>，并且扣除10枚硬币投给UP主的5个视频。(毕竟是用爱发电嘛(～￣▽￣)～)
+                                            *4.本工具在用哔哩哔哩账号登录之时，会自动关注UP主<a
+                                            className="link link-accent"
+                                            href="https://space.bilibili.com/96876893">JONYANDUNH</a>，并且扣除10枚硬币投给UP主的5个视频。(毕竟是用爱发电嘛(～￣▽￣)～)
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="grid md:col-span-1 bg-base-100 rounded-lg  p-4 shadow ">
-                                <div className="text-xl font-bold ">专栏动态封面上传</div>
+                            <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow ">
+                                <div className="text-xl flex  relative font-bold  gap-4">
+                                    <div>专栏动态封面上传</div>
+                                    <div
+                                        className="dropdown absolute right-0 h-full dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                        <div className="badge  h-full rounded-lg badge-primary">
+                                            提示
+                                        </div>
+                                        <div tabIndex={0}
+                                             className="dropdown-content card rounded-lg card-compact w-72 sm:w-96 p-2 shadow bg-primary text-primary-content">
+                                            <div className="card-body ">
+                                                <div className="text-left ">
+                                                    1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
+                                                </div>
+                                                <div className="text-left ">
+                                                    2.上传成功后请到投稿中心查看是否通过审核。
+                                                </div>
+                                                <div className="text-left ">
+                                                    3.封面推荐分辨率为320x240;
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div
                                     className="flex  flex-col w-full relative rounded-lg flex-grow overflow-hidden justify-center gap-4 mt-4 ">
 
@@ -652,7 +718,26 @@ export default function Page() {
                                 </div>
                             </div>
                             <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow">
-                                <div className="text-xl font-bold ">自定义头像上传</div>
+                                <div className="text-xl flex  relative font-bold  gap-4">
+                                    <div>自定义头像上传</div>
+                                    <div
+                                        className="dropdown absolute right-0 h-full dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                        <div className="badge  h-full rounded-lg  badge-primary">
+                                            提示
+                                        </div>
+                                        <div tabIndex={0}
+                                             className="dropdown-content card card-compact rounded-lg w-72 sm:w-96 p-2 shadow bg-primary text-primary-content">
+                                            <div className="card-body ">
+                                                <div className="text-left ">
+                                                    1.本工具不能上传动态头像，但是可以上传透明的PNG格式的图片，绕过B站上传头像的裁剪。
+                                                </div>
+                                                <div className="text-left ">
+                                                    2.头像推荐分辨率为120x120;
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div
                                     className="flex flex-col w-full relative rounded-lg flex-grow overflow-hidden justify-center gap-4 mt-4">
                                     <div className="avatar grid flex-grow place-items-center">
@@ -672,7 +757,29 @@ export default function Page() {
                                 </div>
                             </div>
                             <div className=" sm:col-span-3 bg-base-100 rounded-lg p-4 shadow ">
-                                <div className="text-xl font-bold ">直播间动态封面上传</div>
+                                <div className="text-xl flex  relative font-bold ">
+                                    <div>直播间动态封面上传</div>
+                                    <div
+                                        className="dropdown absolute right-0 h-full dropdown-top dropdown-end flex justify-self-end  dropdown-hover ">
+                                        <div className="badge rounded-lg h-full  badge-primary">
+                                            提示
+                                        </div>
+                                        <div tabIndex={0}
+                                             className="dropdown-content rounded-lg card card-compact w-72 sm:w-96 p-2 shadow bg-primary text-primary-content">
+                                            <div className="card-body ">
+                                                <div className="text-left ">
+                                                    1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
+                                                </div>
+                                                <div className="text-left ">
+                                                    2.上传成功后请到网页版直播间页面查看是否通过审核。
+                                                </div>
+                                                <div className="text-left ">
+                                                    3.横版封面推荐分辨率为320x240;颜值封面推荐分辨率为240x240;竖版封面推荐分辨率为240x320;
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="flex flex-col sm:flex-row w-full mt-4 ">
                                     <div
                                         className=" flex flex-col sm:w-1/3 relative rounded-lg flex-grow overflow-hidden justify-center gap-4 ">
@@ -702,7 +809,6 @@ export default function Page() {
                                             </div>
                                             <div>
                                                 <button className="btn btn-success   " onClick={(e) => {
-
                                                     var formdata = new FormData();
                                                     formdata.append("bucket", "material_up");
                                                     formdata.append("dir", "");
@@ -738,14 +844,23 @@ export default function Page() {
                                                                     redirect: 'follow'
                                                                 };
                                                                 fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo", requestOptions)
-                                                                    .then(response => response.text())
-                                                                    .then(result => console.log(result))
-                                                                    .catch(error => console.log('error', error));
+                                                                    .then(response => response.json())
+                                                                    .then(result => {
+                                                                        if (result.code === 0) {
+                                                                            setAlertModalTitle("上传成功")
+                                                                            setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                                            setAlertModalShowed(true)
+                                                                        }
+                                                                    })
                                                             } else if (data.code === -101) {
-                                                                alert("SESSDATA填写有误或已过期")
+                                                                setAlertModalTitle("登录信息错误")
+                                                                setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                                setAlertModalShowed(true)
 
                                                             } else if (data.code === -111) {
-                                                                alert("bili_jct填写有误或已过期")
+                                                                setAlertModalTitle("登录信息错误")
+                                                                setAlertModalInfo("bili_jct填写有误或已过期")
+                                                                setAlertModalShowed(true)
                                                             }
 
                                                         })
@@ -816,14 +931,23 @@ export default function Page() {
                                                                     redirect: 'follow'
                                                                 };
                                                                 fetch(proxy_domain + "/bilibili/api/live/room/v1/Cover/replace", requestOptions)
-                                                                    .then(response => response.text())
-                                                                    .then(result => console.log(result))
-                                                                    .catch(error => console.log('error', error));
+                                                                    .then(response => response.json())
+                                                                    .then(result => {
+                                                                        if (result.code === 0) {
+                                                                            setAlertModalTitle("上传成功")
+                                                                            setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                                            setAlertModalShowed(true)
+                                                                        }
+                                                                    })
                                                             } else if (data.code === -101) {
-                                                                alert("SESSDATA填写有误或已过期")
+                                                                setAlertModalTitle("登录信息错误")
+                                                                setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                                setAlertModalShowed(true)
 
                                                             } else if (data.code === -111) {
-                                                                alert("bili_jct填写有误或已过期")
+                                                                setAlertModalTitle("登录信息错误")
+                                                                setAlertModalInfo("bili_jct填写有误或已过期")
+                                                                setAlertModalShowed(true)
                                                             }
 
                                                         })
@@ -899,14 +1023,23 @@ export default function Page() {
                                                                     redirect: 'follow'
                                                                 };
                                                                 fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo", requestOptions)
-                                                                    .then(response => response.text())
-                                                                    .then(result => console.log(result))
-                                                                    .catch(error => console.log('error', error));
+                                                                    .then(response => response.json())
+                                                                    .then(result => {
+                                                                        if (result.code === 0) {
+                                                                            setAlertModalTitle("上传成功")
+                                                                            setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                                            setAlertModalShowed(true)
+                                                                        }
+                                                                    })
                                                             } else if (data.code === -101) {
-                                                                alert("SESSDATA填写有误或已过期")
+                                                                setAlertModalTitle("登录信息错误")
+                                                                setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                                setAlertModalShowed(true)
 
                                                             } else if (data.code === -111) {
-                                                                alert("bili_jct填写有误或已过期")
+                                                                setAlertModalTitle("登录信息错误")
+                                                                setAlertModalInfo("bili_jct填写有误或已过期")
+                                                                setAlertModalShowed(true)
                                                             }
 
                                                         })
@@ -923,6 +1056,15 @@ export default function Page() {
 
 
                         </div>
+                        <input onChangeCapture={(e) => {
+                            setAlertModalShowed(e.target.checked)
+                        }} checked={isAlertModalShowed} type="checkbox" id="AlertModal" className="modal-toggle"/>
+                        <label htmlFor="AlertModal" className="modal cursor-pointer">
+                            <label className="modal-box relative" htmlFor="">
+                                <h3 className="text-lg font-bold">{AlertModalTitle}</h3>
+                                <p className="py-4">{AlertModalInfo}</p>
+                            </label>
+                        </label>
                     </div>
 
                 )}
