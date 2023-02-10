@@ -25,6 +25,9 @@ export default  function Page() {
     const [isLoadingLeftMenuItems, setLoadingLeftMenuItems] = useState(false)
     const [thisItemType, setthisItemType] = useState(null)
 
+    const ItemImgLoader = ({src}) => {
+        return src
+    }
     useEffect(() => {
         if(!router.isReady) {
             return;
@@ -32,13 +35,13 @@ export default  function Page() {
         setLoadingTools(true)
         setLoadingLeftMenuItems(true)
         setthisItemType(ItemType)
-        fetch('https://api.deginx.com/tools/get/'+ItemType)
+        fetch('https://api.deginx.com/api/tools/get/'+ItemType)
             .then((res) => res.json())
             .then((data) => {
                 settools(data)
                 setLoadingTools(false)
             })
-        fetch('https://api.deginx.com/tools/get_item_type')
+        fetch('https://api.deginx.com/api/tools/get_item_type')
             .then((res) => res.json())
             .then((data) => {
                 let LeftMenuItems = []
@@ -56,7 +59,7 @@ export default  function Page() {
         const handleRouteChange = (url, { shallow }) => {
             let ItemType=GetQueryString("ItemType")
             setthisItemType(ItemType)
-            fetch('http://127.0.0.1:8000/api/tools/get/'+ItemType)
+            fetch('https://api.deginx.com/api/tools/get/'+ItemType)
                 .then((res) => res.json())
                 .then((data) => {
                     settools(data)
@@ -110,7 +113,9 @@ export default  function Page() {
                             <figure>
                                 <div className="rounded-lg relative  overflow-hidden aspect-w-16 aspect-h-10 w-full">
                                     <Image fill
-                                           src={tool.map.ItemImg}/>
+                                           loader={ItemImgLoader}
+                                           src={tool.map.ItemImg}
+                                    />
                                 </div>
                             </figure>
                             <div className="card-body p-4 sm:p-8 ">

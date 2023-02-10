@@ -23,6 +23,7 @@ function base64ToFile(base64, fileName) {
 export default function Page() {
     const proxy_domain = "https://proxy.deginx.com"
     //const proxy_domain = "/proxy"
+    const domain = "deginx.com"
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -70,10 +71,10 @@ export default function Page() {
     // }
     // Alert(1)
     function clearCookie() {
-        Cookies.remove("SESSDATA", {"path": "/"})
-        Cookies.remove("bili_jct", {"path": "/"})
-        Cookies.remove("isBiliLogin", {"path": "/"})
-        Cookies.remove("DedeUserID__ckMd5", {"path": "/"})
+        Cookies.remove("SESSDATA", {"path": "/",domain: domain})
+        Cookies.remove("bili_jct", {"path": "/",domain: domain})
+        Cookies.remove("isBiliLogin", {"path": "/",domain: domain})
+        Cookies.remove("DedeUserID__ckMd5", {"path": "/",domain: domain})
         window.location.reload()
     }
 
@@ -188,17 +189,8 @@ export default function Page() {
         )
     }
 
-    const BiliArticleCoverLoader = () => {
-        return BiliArticleCover
-    }
-    const BiliLiveroomCoverLoader = () => {
-        return BiliLiveroomCover
-    }
-    const BiliLiveroomCoverVerticalLoader = () => {
-        return BiliLiveroomCoverVertical
-    }
-    const BiliLiveroomShowCoverLoader = () => {
-        return BiliLiveroomShowCover
+    const ImageLoader = ({src}) => {
+        return src
     }
 
     useEffect(() => {
@@ -284,10 +276,10 @@ export default function Page() {
 
     function BiliLoginClickHandler() {
         //setBiliLogin(true)
-        Cookies.set('SESSDATA', SESSDATA, {"path": "/", expires: 365})
-        Cookies.set('bili_jct', bili_jct, {"path": "/", expires: 365})
-        Cookies.set('DedeUserID', DedeUserID, {"path": "/", expires: 365})
-        Cookies.set('DedeUserID__ckMd5', DedeUserID__ckMd5, {"path": "/", expires: 365})
+        Cookies.set('SESSDATA', SESSDATA, {"path": "/", expires: 365,domain: domain})
+        Cookies.set('bili_jct', bili_jct, {"path": "/", expires: 365,domain: domain})
+        Cookies.set('DedeUserID', DedeUserID, {"path": "/", expires: 365,domain: domain})
+        Cookies.set('DedeUserID__ckMd5', DedeUserID__ckMd5, {"path": "/", expires: 365,domain: domain})
 
         var formdata = new FormData();
         formdata.append("bucket", "material_up");
@@ -307,7 +299,7 @@ export default function Page() {
                 if (data.code === 0 || data.code === 20414) {
                     setBiliLogin(true)
                     setBiliLoginFail(false)
-                    Cookies.set('isBiliLogin', true, {"path": "/", expires: 365})
+                    Cookies.set('isBiliLogin', true, {"path": "/", expires: 365,domain: domain})
                     updateBiliInfo()
                 } else if (data.code === -101) {
                     setBiliLoginFail(true)
@@ -501,19 +493,19 @@ export default function Page() {
 
                     <div className="grid flex-grow place-items-center gap-4">
                         <input value={SESSDATA} onChange={e => {
-                            setSESSDATA(e.currentTarget.value);
+                            setSESSDATA(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="SESSDATA"
                                className="input input-bordered input-secondary w-full max-w-xs"/>
                         <input value={bili_jct} onChange={e => {
-                            setbili_jct(e.currentTarget.value);
+                            setbili_jct(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="bili_jct"
                                className="input input-bordered input-info w-full max-w-xs"/>
                         <input value={DedeUserID} onChange={e => {
-                            setDedeUserID(e.currentTarget.value);
+                            setDedeUserID(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="DedeUserID"
                                className="input input-bordered input-info w-full max-w-xs"/>
                         <input value={DedeUserID__ckMd5} onChange={e => {
-                            setDedeUserID__ckMd5(e.currentTarget.value);
+                            setDedeUserID__ckMd5(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="DedeUserID__ckMd5"
                                className="input input-bordered input-info w-full max-w-xs"/>
 
@@ -625,7 +617,7 @@ export default function Page() {
                                 <div className="text-xl flex  relative font-bold  gap-4">
                                     <div>专栏动态封面上传</div>
                                     <div
-                                        className="dropdown absolute right-0 h-full dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                        className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                         <div className="badge  h-full rounded-lg badge-primary">
                                             提示
                                         </div>
@@ -652,7 +644,7 @@ export default function Page() {
                                     <div className="grid flex-grow place-items-center ">
                                         <div className="rounded-lg relative  overflow-hidden w-72 h-48 ">
                                             <Image fill
-                                                   loader={BiliArticleCoverLoader}
+                                                   loader={ImageLoader}
                                                    src={BiliArticleCover}/>
                                         </div>
                                     </div>
@@ -721,7 +713,7 @@ export default function Page() {
                                 <div className="text-xl flex  relative font-bold  gap-4">
                                     <div>自定义头像上传</div>
                                     <div
-                                        className="dropdown absolute right-0 h-full dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                        className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                         <div className="badge  h-full rounded-lg  badge-primary">
                                             提示
                                         </div>
@@ -789,7 +781,7 @@ export default function Page() {
                                         <div className="grid flex-grow place-items-center">
                                             <div className="rounded-lg relative  overflow-hidden w-72 h-48 ">
                                                 <Image fill
-                                                       loader={BiliLiveroomCoverLoader}
+                                                       loader={ImageLoader}
                                                        src={BiliLiveroomCover}/>
                                             </div>
                                         </div>
@@ -841,7 +833,9 @@ export default function Page() {
                                                                     method: 'POST',
                                                                     headers: myHeaders,
                                                                     body: urlencoded,
-                                                                    redirect: 'follow'
+                                                                    redirect: 'follow',
+                                                                    credentials: 'include',
+                                                                    mode: 'cors',
                                                                 };
                                                                 fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo", requestOptions)
                                                                     .then(response => response.json())
@@ -849,6 +843,11 @@ export default function Page() {
                                                                         if (result.code === 0) {
                                                                             setAlertModalTitle("上传成功")
                                                                             setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                                            setAlertModalShowed(true)
+                                                                        }else
+                                                                        {
+                                                                            setAlertModalTitle("上传失败")
+                                                                            setAlertModalInfo(result.message)
                                                                             setAlertModalShowed(true)
                                                                         }
                                                                     })
@@ -879,7 +878,7 @@ export default function Page() {
                                         <div className="grid flex-grow place-items-center">
                                             <div className="rounded-lg relative  overflow-hidden w-48 h-48 ">
                                                 <Image fill
-                                                       loader={BiliLiveroomShowCoverLoader}
+                                                       loader={ImageLoader}
                                                        src={BiliLiveroomShowCover}/>
                                             </div>
                                         </div>
@@ -928,7 +927,9 @@ export default function Page() {
                                                                 var requestOptions = {
                                                                     method: 'POST',
                                                                     body: urlencoded,
-                                                                    redirect: 'follow'
+                                                                    redirect: 'follow',
+                                                                    credentials: 'include',
+                                                                    mode: 'cors',
                                                                 };
                                                                 fetch(proxy_domain + "/bilibili/api/live/room/v1/Cover/replace", requestOptions)
                                                                     .then(response => response.json())
@@ -936,6 +937,11 @@ export default function Page() {
                                                                         if (result.code === 0) {
                                                                             setAlertModalTitle("上传成功")
                                                                             setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                                            setAlertModalShowed(true)
+                                                                        }else
+                                                                        {
+                                                                            setAlertModalTitle("上传失败")
+                                                                            setAlertModalInfo(result.message)
                                                                             setAlertModalShowed(true)
                                                                         }
                                                                     })
@@ -967,7 +973,7 @@ export default function Page() {
                                         <div className="grid flex-grow place-items-center">
                                             <div className="rounded-lg relative  overflow-hidden w-48 h-72 ">
                                                 <Image fill
-                                                       loader={BiliLiveroomCoverVerticalLoader}
+                                                       loader={ImageLoader}
                                                        src={BiliLiveroomCoverVertical}/>
                                             </div>
                                         </div>
@@ -1020,7 +1026,9 @@ export default function Page() {
                                                                     method: 'POST',
                                                                     headers: myHeaders,
                                                                     body: urlencoded,
-                                                                    redirect: 'follow'
+                                                                    redirect: 'follow',
+                                                                    credentials: 'include',
+                                                                    mode: 'cors',
                                                                 };
                                                                 fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo", requestOptions)
                                                                     .then(response => response.json())
@@ -1028,6 +1036,11 @@ export default function Page() {
                                                                         if (result.code === 0) {
                                                                             setAlertModalTitle("上传成功")
                                                                             setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                                            setAlertModalShowed(true)
+                                                                        }else
+                                                                        {
+                                                                            setAlertModalTitle("上传失败")
+                                                                            setAlertModalInfo(result.message)
                                                                             setAlertModalShowed(true)
                                                                         }
                                                                     })
