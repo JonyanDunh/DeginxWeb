@@ -2,7 +2,7 @@ export default function Footer() {
     return (
         <>
             <div id="footer" className="w-full  ">
-                <footer className="footer p-10  text-neutral-content bg-primary rounded-lg mb-4">
+                <footer className="footer p-10   bg-base-200 rounded-lg mb-4 shadow">
                     <div>
                         <svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
                              fillRule="evenodd" clipRule="evenodd" className="fill-current">

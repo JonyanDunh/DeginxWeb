@@ -21,9 +21,9 @@ function base64ToFile(base64, fileName) {
 }
 
 export default function Page() {
-    const proxy_domain = "https://proxy.deginx.com"
-    //const proxy_domain = "/proxy"
-    const domain = "deginx.com"
+    //const proxy_domain = "https://proxy.deginx.com"
+    const proxy_domain = "/proxy"
+    const domain = ""
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -313,20 +313,20 @@ export default function Page() {
             })
     }
 
-    const bilibili_profile = <div className="bilibili_profile  glass w-full sm:w-72 rounded-lg">
-        <div className="tabs">
+    const bilibili_profile = <div className="bilibili_profile shadow  w-full sm:w-72 rounded-lg">
+        <div className="tabs ">
 
             <div onClick={() => {
                 setBiliInfoTab(0)
-            }} className={`${BiliInfoTab == 0 ? "tab-active" : ""} tab w-1/2 tab-lg tab-lifted font-semibold`}>资料
+            }} className={`${BiliInfoTab == 0 ? "bg-base-200 border-b-0" : ""} tab w-1/2 tab-lg tab-lifted font-semibold `}>资料
             </div>
             {/*<div onClick={()=>{setBiliInfoTab(1)}} className={`${BiliInfoTab==1?"tab-active":""} tab w-1/3 tab-lg tab-lifted font-semibold`}>设置</div>*/}
             <div onClick={() => {
                 setBiliInfoTab(1)
-            }} className={`${BiliInfoTab == 1 ? "tab-active" : ""} tab w-1/2 tab-lg tab-lifted font-semibold`}>退出
+            }} className={`${BiliInfoTab == 1 ? "bg-base-200 border-b-0" : ""} tab w-1/2 tab-lg tab-lifted font-semibold`}>退出
             </div>
         </div>
-        <div className={` tab_content bg-base-100  rounded-b-lg`}>
+        <div className={` tab_content bg-base-200  rounded-b-lg border-t-0`}>
             <div className="flex flex-col">
                 <div className="avatar justify-center m-6">
                     <div className="w-24 mask mask-squircle">
@@ -337,7 +337,7 @@ export default function Page() {
                 <div className="text-xl text-center font-bold">{BiliUserName}</div>
                 <div className="text-center ">
                     <div
-                        className="text-center font-semibold badge badge-primary badge-outline">uid:{BiliUid}
+                        className="text-center font-semibold badge badge-accent rounded-lg">uid:{BiliUid}
                     </div>
                 </div>
                 <div className={BiliInfoTab == 0 ? "" : "hidden"}>
@@ -368,17 +368,17 @@ export default function Page() {
                         </div>
                     </div>
                     <div className="text-center mb-4">
-                        <a href={"https://space.bilibili.com/" + BiliUid} target="_blank" className="btn btn-primary"
+                        <a href={"https://space.bilibili.com/" + BiliUid} target="_blank" className="btn btn-primary rounded-lg"
                            rel="noreferrer">前往个人主页</a>
                     </div>
                     <div className="text-center mb-6">
                         <a href={"https://live.bilibili.com/" + BiliLiveroom} target="_blank"
-                           className="btn btn-primary" rel="noreferrer">前往直播页面</a>
+                           className="btn btn-secondary rounded-lg" rel="noreferrer">前往直播页面</a>
                     </div>
                 </div>
                 <div className={BiliInfoTab == 1 ? "" : "hidden"}>
                     <div className="text-center m-6">
-                        <a onClick={clearCookie} target="_blank" className="btn btn-warning"
+                        <a onClick={clearCookie} target="_blank" className="btn btn-primary rounded-lg"
                            rel="noreferrer">仅清除Cookie</a>
                     </div>
                     <div className="text-center mb-6">
@@ -401,7 +401,7 @@ export default function Page() {
                                     }
                                 })
                         }} target="_blank"
-                           className="btn btn-error" rel="noreferrer">完全退出(Cookie会失效)</a>
+                           className="btn btn-secondary rounded-lg" rel="noreferrer">完全退出(Cookie会失效)</a>
                     </div>
                 </div>
             </div>
@@ -409,11 +409,11 @@ export default function Page() {
 
     </div>
     const bilibili_login =
-        <div className="bilibili_login  bg-base-100 w-full sm:w-72 rounded-lg ">
+        <div className="bilibili_login  bg-base-200 w-full sm:w-72 rounded-lg  shadow">
             <div className="flex flex-col w-full p-4 ">
-                <div className="text-xl font-bold mb-4">哔哩哔哩账号登录</div>
+                <div className="text-xl font-bold mb-4 ">哔哩哔哩账号登录</div>
                 <div className="grid flex flex-col gap-4">
-                    <div className="text-left text-base font-bold">
+                    <div className="text-left  font-bold ">
                         二维码获取Cookie
                     </div>
                     <div className="grid flex-grow place-items-center">
@@ -436,7 +436,7 @@ export default function Page() {
                     </div>
                     {!isQrcodeFailed ? <div>
                         {!isQrcodeLogin ?
-                            <div className="alert alert-info shadow-lg">
+                            <div className="alert bg-neutral text-neutral-content shadow-lg">
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                          className="stroke-current flex-shrink-0 w-6 h-6">
@@ -450,7 +450,7 @@ export default function Page() {
 
                             </div>
                             :
-                            <div className="alert alert-success shadow-lg">
+                            <div className="alert bg-accent text-accent-content shadow-lg">
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                          className="stroke-current flex-shrink-0 h-6 w-6"
@@ -462,7 +462,7 @@ export default function Page() {
                                 </div>
                             </div>
                         }
-                    </div> : <div className="alert alert-error shadow-lg">
+                    </div> : <div className="alert bg-secondary text-secondary-content shadow-lg">
                         <div>
                             <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
                                  fill="none" viewBox="0 0 24 24">
@@ -476,10 +476,10 @@ export default function Page() {
                 </div>
                 <div className="divider"></div>
                 <div className="grid flex flex-col gap-4">
-                    <div className="text-left text-base font-bold">
+                    <div className="text-left  font-bold">
                         手动输入Cookie
                     </div>
-                    {isBiliLoginFail ? <div className="alert alert-error shadow-lg">
+                    {isBiliLoginFail ? <div className="alert bg-secondary text-secondary-content shadow-lg">
                         <div>
                             <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
                                  fill="none" viewBox="0 0 24 24">
@@ -495,15 +495,15 @@ export default function Page() {
                         <input value={SESSDATA} onChange={e => {
                             setSESSDATA(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="SESSDATA"
-                               className="input input-bordered input-secondary w-full max-w-xs"/>
+                               className="input input-bordered input-primary w-full max-w-xs"/>
                         <input value={bili_jct} onChange={e => {
                             setbili_jct(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="bili_jct"
-                               className="input input-bordered input-info w-full max-w-xs"/>
+                               className="input input-bordered input-secondary w-full max-w-xs"/>
                         <input value={DedeUserID} onChange={e => {
                             setDedeUserID(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="DedeUserID"
-                               className="input input-bordered input-info w-full max-w-xs"/>
+                               className="input input-bordered input-accent w-full max-w-xs"/>
                         <input value={DedeUserID__ckMd5} onChange={e => {
                             setDedeUserID__ckMd5(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="DedeUserID__ckMd5"
@@ -511,13 +511,13 @@ export default function Page() {
 
                         <div className="flex  justify-center">
                             <button disabled={!isConfirmedRule} onClick={BiliLoginClickHandler}
-                                    className="btn btn-success ">登录账号
+                                    className="btn btn-primary rounded-lg">登录账号
                             </button>
                         </div>
                         <div className="form-control">
                             <label className="cursor-pointer label text-center">
                                 <span
-                                    className="label-text mr-4 font-bold">已确保我已阅读用户须知<br/>并接受全部内容</span>
+                                    className="label-text mr-4  font-bold">已确保我已阅读用户须知<br/>并接受全部内容</span>
                                 <input onChangeCapture={(e) => {
                                     setConfirmedRule(e.target.checked)
                                 }} checked={isConfirmedRule} type="checkbox" className="checkbox checkbox-error"/>
@@ -533,24 +533,24 @@ export default function Page() {
                 {(
                     <div className="left_content  sm:static">
                         {isBiliLogin ? bilibili_profile : bilibili_login}
-                        <div className="stats shadow flex flex-col mt-4 rounded-lg">
-                            <div className="stat ">
-                                <div className="stat-figure text-secondary ">
+                        <div className="stats shadow flex flex-col mt-4 rounded-lg bg-base-200">
+                            <div className="stat">
+                                <div className="stat-figure text-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                          className="inline-block w-8 h-8 stroke-current">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                               d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                     </svg>
                                 </div>
-                                <div className="stat-title">本工具服务人数</div>
-                                <div className="stat-value text-secondary">{BiliToolsUserCounts}</div>
-                                <div className="stat-desc">根据用户哔哩哔哩UID来统计</div>
+                                <div className="stat-title ">本工具服务人数</div>
+                                <div className="stat-value text-accent">{BiliToolsUserCounts}</div>
+                                <div className="stat-desc ">根据用户哔哩哔哩UID来统计</div>
                             </div>
                         </div>
-                        <div className="bg-base-100 rounded-lg mt-4 p-4 shadow">
-                            <div className=" text-lg font-bold">打赏支持作者 :)</div>
+                        <div className="bg-base-200 rounded-lg mt-4 p-4 shadow">
+                            <div className=" text-lg font-bold ">打赏支持作者 :)</div>
                             <div
-                                className="text-sm  italic">您的支持是对我最大的鼓励！UP主将继续努力发掘更多有意思的东西给大家~
+                                className="text-sm  italic ">您的支持是对我最大的鼓励！UP主将继续努力发掘更多有意思的东西给大家~
                             </div>
                             <div className="grid grid-cols-2 pt-4 gap-4">
                                 <div>
@@ -569,7 +569,7 @@ export default function Page() {
                                                 src="https://message.biliimg.com/bfs/im/703dec6333b348170b705355be9eb8b52654e236.png"/>
                                         </div>
                                     </div>
-                                    <div className="text-center font-semibold">支付宝</div>
+                                    <div className="text-center font-semibold ">支付宝</div>
                                 </div>
                             </div>
                         </div>
@@ -578,51 +578,51 @@ export default function Page() {
             page=
                 {(
                     <div>
-                        <div className="alert alert-info shadow-lg rounded-lg mb-4">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     className="stroke-current flex-shrink-0 w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span>此工具箱为内测版，功能可能存在不稳定，敬请原谅</span>
-                            </div>
-                        </div>
+                        {/*<div className="alert bg-neutral text-neutral-content shadow-lg rounded-lg mb-4">*/}
+                        {/*    <div>*/}
+                        {/*        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"*/}
+                        {/*             className="stroke-current flex-shrink-0 w-6 h-6">*/}
+                        {/*            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"*/}
+                        {/*                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>*/}
+                        {/*        </svg>*/}
+                        {/*        <span>此工具箱为内测版，功能可能存在不稳定，敬请原谅</span>*/}
+                        {/*    </div>*/}
+                        {/*</div>*/}
                         <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
                             <div
-                                className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow overflow-scroll max-h-128">
+                                className="flex  flex-col bg-base-200 rounded-lg  p-4 shadow overflow-scroll max-h-128">
                                 <div className="text-xl font-bold ">用户须知</div>
                                 <div className="flex flex-col sm:flex-row w-full mt-4 ">
                                     <div
                                         className=" flex flex-col sm:w-1/3 relative rounded-lg flex-grow overflow-hidden justify-center gap-4 ">
-                                        <div className="text-left text-base ">
+                                        <div className="text-left  ">
                                             1.如果使用我们的网站，将视为同意我们和我们的第三方服务提供商在您的计算机上设置Cookie。
                                         </div>
-                                        <div className="text-left text-base ">
+                                        <div className="text-left  ">
                                             2.除非为了特定的活动或基于本网站不时增加的特定功能，本网站不会主动收集您的个人信息。如果在上述情况下收集个人信息，这些个人信息将会仅用于特定且有限的目的。个人信息一经收集后，若未经您的同意，将不会用于明示目的之外的其他目的。
                                         </div>
-                                        <div className="text-left text-base ">
+                                        <div className="text-left  ">
                                             3.本网站不会记录任何<a className="link link-secondary"
                                                                    href="https://www.bilibili.com/">哔哩哔哩</a>网站的Cookie，但会记录用户的Uid、用户名、粉丝数等信息用来统计工具使用人数。
                                         </div>
-                                        <div className="text-left text-base font-bold ">
+                                        <div className="text-left  font-bold ">
                                             *4.本工具在用哔哩哔哩账号登录之时，会自动关注UP主<a
-                                            className="link link-accent"
+                                            className="link link-neutral"
                                             href="https://space.bilibili.com/96876893">JONYANDUNH</a>，并且扣除10枚硬币投给UP主的5个视频。(毕竟是用爱发电嘛(～￣▽￣)～)
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow ">
+                            <div className="flex  flex-col bg-base-200 rounded-lg  p-4 shadow ">
                                 <div className="text-xl flex  relative font-bold  gap-4">
-                                    <div>专栏动态封面上传</div>
+                                    <div >专栏动态封面上传</div>
                                     <div
                                         className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
-                                        <div className="badge  h-full rounded-lg badge-primary">
+                                        <div className="badge  h-full rounded-lg badge-accent">
                                             提示
                                         </div>
                                         <div tabIndex={0}
-                                             className="dropdown-content card rounded-lg card-compact w-72 sm:w-96 p-2 shadow bg-primary text-primary-content">
+                                             className="dropdown-content card rounded-lg card-compact w-72 sm:w-96 p-2 shadow bg-neutral text-neutral-content">
                                             <div className="card-body ">
                                                 <div className="text-left ">
                                                     1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
@@ -631,7 +631,7 @@ export default function Page() {
                                                     2.上传成功后请到投稿中心查看是否通过审核。
                                                 </div>
                                                 <div className="text-left ">
-                                                    3.封面推荐分辨率为320x240;
+                                                    3.封面推荐分辨率为360x240;
                                                 </div>
                                             </div>
                                         </div>
@@ -651,7 +651,7 @@ export default function Page() {
                                     <div className="flex  justify-center">
                                         <button disabled onClick={(e) => {
                                             NewBiliArticleCoverFileRef.current.click();
-                                        }} className="btn btn-warning  ">选择图片
+                                        }} className="btn btn-primary  rounded-lg">选择图片
                                         </button>
                                     </div>
                                     <div className="flex  justify-center">
@@ -704,21 +704,21 @@ export default function Page() {
                                                     }
 
                                                 })
-                                        }} className="btn btn-success">上传图片
+                                        }} className="btn btn-secondary rounded-lg">上传图片
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex  flex-col bg-base-100 rounded-lg  p-4 shadow">
+                            <div className="flex  flex-col bg-base-200 rounded-lg  p-4 shadow">
                                 <div className="text-xl flex  relative font-bold  gap-4">
-                                    <div>自定义头像上传</div>
+                                    <div >自定义头像上传</div>
                                     <div
                                         className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
-                                        <div className="badge  h-full rounded-lg  badge-primary">
+                                        <div className="badge  h-full rounded-lg  badge-accent">
                                             提示
                                         </div>
                                         <div tabIndex={0}
-                                             className="dropdown-content card card-compact rounded-lg w-72 sm:w-96 p-2 shadow bg-primary text-primary-content">
+                                             className="dropdown-content card card-compact rounded-lg w-72 sm:w-96 p-2 shadow bg-neutral text-neutral-content">
                                             <div className="card-body ">
                                                 <div className="text-left ">
                                                     1.本工具不能上传动态头像，但是可以上传透明的PNG格式的图片，绕过B站上传头像的裁剪。
@@ -740,33 +740,33 @@ export default function Page() {
                                     </div>
                                     <div className="flex  justify-center gap-4">
                                         <div>
-                                            <button disabled className="btn btn-warning  ">选择图片</button>
+                                            <button disabled className="btn btn-primary  rounded-lg">选择图片</button>
                                         </div>
                                         <div>
-                                            <button disabled className="btn btn-success   ">上传图片</button>
+                                            <button disabled className="btn btn-secondary   rounded-lg">上传图片</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className=" sm:col-span-3 bg-base-100 rounded-lg p-4 shadow ">
+                            <div className=" sm:col-span-3 bg-base-200 rounded-lg p-4 shadow ">
                                 <div className="text-xl flex  relative font-bold ">
-                                    <div>直播间动态封面上传</div>
+                                    <div >直播间动态封面上传</div>
                                     <div
                                         className="dropdown absolute right-0 h-full dropdown-top dropdown-end flex justify-self-end  dropdown-hover ">
-                                        <div className="badge rounded-lg h-full  badge-primary">
+                                        <div className="badge rounded-lg h-full  badge-accent">
                                             提示
                                         </div>
                                         <div tabIndex={0}
-                                             className="dropdown-content rounded-lg card card-compact w-72 sm:w-96 p-2 shadow bg-primary text-primary-content">
+                                             className="dropdown-content rounded-lg card card-compact w-72 sm:w-96 p-2 shadow bg-neutral text-neutral-content">
                                             <div className="card-body ">
-                                                <div className="text-left ">
+                                                <div className="text-left">
                                                     1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
                                                 </div>
-                                                <div className="text-left ">
+                                                <div className="text-left">
                                                     2.上传成功后请到网页版直播间页面查看是否通过审核。
                                                 </div>
-                                                <div className="text-left ">
-                                                    3.横版封面推荐分辨率为320x240;颜值封面推荐分辨率为240x240;竖版封面推荐分辨率为240x320;
+                                                <div className="text-left">
+                                                    3.横版封面推荐分辨率为360x240;颜值封面推荐分辨率为240x240;竖版封面推荐分辨率为240x360;
                                                 </div>
                                             </div>
                                         </div>
@@ -775,7 +775,7 @@ export default function Page() {
                                 <div className="flex flex-col sm:flex-row w-full mt-4 ">
                                     <div
                                         className=" flex flex-col sm:w-1/3 relative rounded-lg flex-grow overflow-hidden justify-center gap-4 ">
-                                        <div className="text-center text-base font-bold">
+                                        <div className="text-center  font-bold">
                                             横版封面
                                         </div>
                                         <div className="grid flex-grow place-items-center">
@@ -794,13 +794,13 @@ export default function Page() {
                                         />
                                         <div className="flex  justify-center gap-4">
                                             <div>
-                                                <button className="btn btn-warning  " onClick={(e) => {
+                                                <button className="btn btn-primary rounded-lg " onClick={(e) => {
                                                     NewBiliLiveroomCoverFileRef.current.click();
                                                 }}>选择图片
                                                 </button>
                                             </div>
                                             <div>
-                                                <button className="btn btn-success   " onClick={(e) => {
+                                                <button className="btn btn-secondary   rounded-lg" onClick={(e) => {
                                                     var formdata = new FormData();
                                                     formdata.append("bucket", "material_up");
                                                     formdata.append("dir", "");
@@ -872,7 +872,7 @@ export default function Page() {
                                     <div className="divider sm:hidden"/>
                                     <div
                                         className=" flex flex-col sm:w-1/3 relative rounded-lg flex-grow overflow-hidden justify-center gap-4">
-                                        <div className="text-center text-base font-bold">
+                                        <div className="text-center  font-bold">
                                             颜值封面
                                         </div>
                                         <div className="grid flex-grow place-items-center">
@@ -891,13 +891,13 @@ export default function Page() {
                                         />
                                         <div className="flex  justify-center gap-4">
                                             <div>
-                                                <button disabled className="btn btn-warning  " onClick={(e) => {
+                                                <button disabled className="btn btn-primary  rounded-lg" onClick={(e) => {
                                                     NewBiliLiveroomShowCoverFileRef.current.click();
                                                 }}>选择图片
                                                 </button>
                                             </div>
                                             <div>
-                                                <button disabled className="btn btn-success   " onClick={(e) => {
+                                                <button disabled className="btn btn-secondary   rounded-lg" onClick={(e) => {
 
                                                     var formdata = new FormData();
                                                     formdata.append("bucket", "material_up");
@@ -967,7 +967,7 @@ export default function Page() {
                                     <div className="divider sm:hidden"/>
                                     <div
                                         className=" flex flex-col sm:w-1/3 relative rounded-lg flex-grow overflow-hidden justify-center gap-4">
-                                        <div className="text-center text-base font-bold">
+                                        <div className="text-center  font-bold">
                                             竖版封面
                                         </div>
                                         <div className="grid flex-grow place-items-center">
@@ -986,13 +986,13 @@ export default function Page() {
                                         />
                                         <div className="flex  justify-center gap-4">
                                             <div>
-                                                <button className="btn btn-warning  " onClick={(e) => {
+                                                <button className="btn btn-primary  rounded-lg" onClick={(e) => {
                                                     NewBiliLiveroomCoverVerticalFileRef.current.click();
                                                 }}>选择图片
                                                 </button>
                                             </div>
                                             <div>
-                                                <button className="btn btn-success   " onClick={(e) => {
+                                                <button className="btn btn-secondary   rounded-lg" onClick={(e) => {
 
                                                     var formdata = new FormData();
                                                     formdata.append("bucket", "material_up");

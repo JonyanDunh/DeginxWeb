@@ -4,8 +4,8 @@ export default function Navbar({}) {
     const router = useRouter()
     return (
         <>
-            <div id="header" className="header w-full my-4   ">
-            <div className="navbar w-full text-neutral-content  rounded-lg glass">
+            <div id="header" className="header w-full my-4  shadow ">
+            <div className="navbar w-full  rounded-lg bg-base-200">
                 <div className="flex-1">
                     <a className="btn btn-ghost normal-case text-xl">DeginX</a>
                 </div>
