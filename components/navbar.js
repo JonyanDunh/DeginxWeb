@@ -14,6 +14,7 @@ export default function Navbar({}) {
 
             <div className="navbar rounded-box bg-base-100 my-4 ">
                 <div className="flex-1">
+                    {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                     <a href="/" aria-current="page" aria-label="Homepage" className="flex-0 btn btn-ghost px-2">
                         <div
                             className="font-title text-primary inline-flex text-lg transition-all duration-200 md:text-3xl">

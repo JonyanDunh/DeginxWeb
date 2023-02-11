@@ -51,9 +51,20 @@ export default function Page() {
     const [BiliLiveroomCoverVertical, setBiliLiveroomCoverVertical] = useState("https://i0.hdslb.com/bfs/new_dyn/c827da1aecf4b1990aca9316de835bea6823116.png@1554w.webp")
     const [BiliLiveroomShowCover, setBiliLiveroomShowCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png")
     const [BiliArticles, setBiliArticles] = useState([])
+    const [BiliArticlesList, setBiliArticlesList] = useState([])
+    const [BiliVideoSeasons, setBiliVideoSeasons] = useState([])
+    const [BiliArticleListCover, setBiliArticleListCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
-    const [BiliSelectedArticle, setBiliSelectedArticle] = useState(0);
+    const [BiliArticleHeader, setBiliArticleHeader] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
+    const [BiliVideoSeasonsCover, setBiliVideoSeasonsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
+    const [BiliSelectedArticleList, setBiliSelectedArticleList] = useState(0);
+    const [BiliSelectedArticleCover, setBiliSelectedArticleCover] = useState(0);
+    const [BiliSelectedArticleHeader, setBiliSelectedArticleHeader] = useState(0);
+    const [BiliSelectedVideoSeasons, setBiliSelectedVideoSeasons] = useState(0);
+    const NewBiliArticleListCoverFileRef = React.useRef();
+    const NewBiliVideoSeasonsCoverFileRef = React.useRef();
     const NewBiliArticleCoverFileRef = React.useRef();
+    const NewBiliArticleHeaderFileRef = React.useRef();
     const NewBiliLiveroomCoverFileRef = React.useRef();
     const NewBiliLiveroomCoverVerticalFileRef = React.useRef();
     const NewBiliLiveroomShowCoverFileRef = React.useRef();
@@ -62,13 +73,6 @@ export default function Page() {
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
     const AlertRef = React.useRef();
 
-    // function Alert(message, type) {
-    //
-    //     //AlertRef.current.innerHTML += `<div onClick={(e) => {e.target.remove()}} className="alert alert-success">{message}</div>`;
-    //     //AlertRef.current += `<div onClick={(e) => {e.target.remove()}} className="alert alert-success">{message}</div>`
-    //     console.log(AlertRef.current)
-    // }
-    // Alert(1)
     function clearCookie() {
         Cookies.remove("SESSDATA", {"path": "/", domain: domain})
         Cookies.remove("bili_jct", {"path": "/", domain: domain})
@@ -120,10 +124,8 @@ export default function Page() {
         })
             .then(response => response.json())
             .then(result => {
-                if (result.data.cover.url !== "")
-                    setBiliLiveroomCover(result.data.cover.url)
-                if (result.data.coverVertical.url !== "")
-                    setBiliLiveroomCoverVertical(result.data.coverVertical.url)
+                if (result.data.cover.url !== "") setBiliLiveroomCover(result.data.cover.url)
+                if (result.data.coverVertical.url !== "") setBiliLiveroomCoverVertical(result.data.coverVertical.url)
             })
         fetch(proxy_domain + "/bilibili/api/x/article/creative/article/list?group=0&sort=&pn=1&mobi_app=pc", {
             method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
@@ -140,10 +142,40 @@ export default function Page() {
                         Articles = Articles.concat(result.artlist.drafts)
                         console.log(Articles)
                         setBiliArticles(Articles)
-                        if (Articles[0] != null) setBiliArticleCover(Articles[0].image_urls[0]);
+                        if (Articles[0] != null) {
+                            if (Articles[0].image_urls[0] != null) setBiliArticleCover(Articles[0].image_urls[0]);
+                            if (Articles[0].banner_url !== "") {
+                                setBiliArticleHeader(Articles[0].banner_url)
+                            }
+
+                        }
+
                     })
                 setBiliArticles(result.artlist.articles)
 
+            })
+
+        fetch(proxy_domain + "/bilibili/api/x/article/creative/list/all", {
+            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(result => {
+               if (result.code===0 && result.data.lists!=null){
+                setBiliArticlesList(result.data.lists)
+                   if(result.data.lists[0].image_url!=="")
+                       setBiliArticleListCover(result.data.lists[0].image_url)
+               }
+            })
+
+        fetch(proxy_domain + "/bilibili/member/x2/creative/web/seasons?pn=1&ps=30&order=mtime&sort=desc&draft=1", {
+            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code===0 && result.data.seasons!=null){
+                    setBiliVideoSeasons(result.data.seasons)
+                    setBiliVideoSeasonsCover(result.data.seasons[0].season.cover)
+                }
             })
         var formdata = new FormData();
         formdata.append("fid", "96876893");
@@ -286,23 +318,14 @@ export default function Page() {
         return data == null ? "" : data
     }
 
-    function updateArticle(Article, ImageUrl) {
-        var UpdateArticleUrl = Article.publish_time !== 0 ?
-            proxy_domain + "/bilibili/api/x/article/creative/article/update"
-            :
-            proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate"
+    function updateArticle(Article, ImageUrl, type) {
+        var UpdateArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/update" : proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate"
 
-        var GetArticleUrl = Article.publish_time !== 0 ?
-            proxy_domain + "/bilibili/api/x/article/creative/article/view?aid=" + Article.id
-            :
-            proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + Article.id
+        var GetArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/view?aid=" + Article.id : proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + Article.id
 
 
         fetch(GetArticleUrl, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'include',
-            redirect: 'follow'
+            method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
         })
             .then(response => response.json())
             .then(result => {
@@ -311,7 +334,7 @@ export default function Page() {
 
                     var formdata = new FormData();
                     formdata.append("title", checkDataNull(Article.title));
-                    formdata.append("banner_url", ImageUrl);
+                    formdata.append("banner_url", type === 0 ? Article.banner_url : ImageUrl);
                     formdata.append("content", checkDataNull(Article.content));
                     formdata.append("summary", checkDataNull(Article.summary));
                     formdata.append("category", checkDataNull(Article.category.id));
@@ -319,8 +342,8 @@ export default function Page() {
                     formdata.append("tid", checkDataNull(Article.template_id));
                     formdata.append("reprint", checkDataNull(Article.reprint));
                     formdata.append("tags", checkDataNull(Article.tags));
-                    formdata.append("image_urls", ImageUrl);
-                    formdata.append("origin_image_urls", ImageUrl);
+                    formdata.append("image_urls", type === 1 ? Article.image_urls : ImageUrl);
+                    formdata.append("origin_image_urls", type === 1 ? Article.origin_image_urls : ImageUrl);
                     formdata.append("dynamic_intro", checkDataNull(Article.dynamic_intro));
                     formdata.append("media_id", checkDataNull(Article.media_id));
                     formdata.append("spoiler", checkDataNull(Article.spoiler));
@@ -332,17 +355,13 @@ export default function Page() {
 
 
                     fetch(UpdateArticleUrl, {
-                        method: 'POST',
-                        body: formdata,
-                        mode: 'cors',
-                        credentials: 'include',
-                        redirect: 'follow'
+                        method: 'POST', body: formdata, mode: 'cors', credentials: 'include', redirect: 'follow'
                     })
                         .then(response => response.json())
                         .then(result => {
                             if (result.code === 0) {
                                 setAlertModalTitle("上传成功")
-                                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                setAlertModalInfo("请到投稿页面查看上传结果。")
                                 setAlertModalShowed(true)
                             } else {
                                 setAlertModalTitle("上传失败")
@@ -613,19 +632,9 @@ export default function Page() {
             </div>)}
         page=
             {(<div>
-                    {/*<div className="alert bg-neutral text-neutral-content -lg  mb-4">*/}
-                    {/*    <div>*/}
-                    {/*        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"*/}
-                    {/*             className="stroke-current flex-shrink-0 w-6 h-6">*/}
-                    {/*            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"*/}
-                    {/*                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>*/}
-                    {/*        </svg>*/}
-                    {/*        <span>此工具箱为内测版，功能可能存在不稳定，敬请原谅</span>*/}
-                    {/*    </div>*/}
-                    {/*</div>*/}
                     <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
-                        <div
-                            className="card  flex  flex-col bg-base-100   p-4  overflow-scroll max-h-128">
+                        {/*用户须知*/}
+                        <div className="card  flex  flex-col bg-base-100   p-4  overflow-scroll max-h-128">
                             <div className="text-xl font-bold ">用户须知</div>
                             <div className="flex flex-col sm:flex-row w-full mt-4 ">
                                 <div
@@ -648,159 +657,7 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
-                        <div className="card flex  flex-col bg-base-100   p-4  ">
-                            <div className="text-xl flex  relative font-bold  gap-4">
-                                <div>专栏动态封面上传</div>
-                                <div
-                                    className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
-                                    <div className="badge  h-full  badge-accent">
-                                        提示
-                                    </div>
-                                    <div tabIndex={0}
-                                         className="dropdown-content card  card-compact w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
-                                        <div className="card-body ">
-                                            <div className="text-left ">
-                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
-                                            </div>
-                                            <div className="text-left ">
-                                                2.上传成功后请到投稿中心查看是否通过审核。
-                                            </div>
-                                            <div className="text-left ">
-                                                3.封面推荐分辨率为360x240;
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                className="flex  flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4 ">
-
-                                <div className="grid flex-grow place-items-center ">
-                                    <div className="card relative  overflow-hidden w-72 h-48 ">
-                                        <Image fill
-                                               loader={ImageLoader}
-                                               src={BiliArticleCover}/>
-                                    </div>
-                                </div>
-
-                                <div className="flex  justify-center">
-                                    <input hidden
-                                           type="file"
-                                           ref={NewBiliArticleCoverFileRef}
-                                           onChangeCapture={(e) => {
-                                               setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
-                                           }}
-                                    />
-                                    <select value={BiliSelectedArticle}
-                                            onChange={(e) => {
-                                                console.log(BiliArticles[e.target.value])
-                                                setBiliArticleCover(BiliArticles[e.target.value].image_urls[0]);
-                                                setBiliSelectedArticle(e.target.value)
-                                            }} className="select select-secondary w-full max-w-xs">
-                                        <option disabled>请选择一个专栏</option>
-                                        {BiliArticles.map((item, index) => (
-                                            <option value={index}
-                                                    key={index}>{item.publish_time != 0 ? "已发布" : "草稿箱"}-{item.title}</option>))}
-                                    </select>
-                                </div>
-                                <div className="flex  justify-center  gap-4">
-                                    <div className="flex  justify-center">
-                                        <button onClick={(e) => {
-                                            NewBiliArticleCoverFileRef.current.click();
-                                        }} className="btn btn-primary  ">选择图片
-                                        </button>
-                                    </div>
-                                    <button onClick={(e) => {
-
-                                        var formdata = new FormData();
-                                        formdata.append("bucket", "material_up");
-                                        formdata.append("dir", "");
-                                        formdata.append("file", NewBiliArticleCoverFileRef.current.files[0]);
-                                        formdata.append("csrf", bili_jct);
-
-                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                            method: 'POST',
-                                            mode: 'cors',
-                                            body: formdata,
-                                            credentials: 'include',
-                                            redirect: 'follow'
-                                        })
-                                            .then((res) => res.json())
-                                            .then(data => {
-                                                if (data.code === 0 || data.code === 20414) {
-                                                    var Article = BiliArticles[BiliSelectedArticle]
-
-                                                    var formdata = new FormData();
-                                                    formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
-                                                    formdata.append("banner_url", data.data.location);
-                                                    formdata.append("csrf", bili_jct);
-                                                    var requestOptions = {
-                                                        method: 'POST',
-                                                        body: formdata,
-                                                        mode: 'cors',
-                                                        credentials: 'include',
-                                                        redirect: 'follow'
-                                                    };
-
-                                                    fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate", requestOptions)
-                                                        .then(response => response.json())
-                                                        .then(result => {
-                                                            if (result.code === 0) {
-                                                                var requestOptions = {
-                                                                    method: 'GET',
-                                                                    redirect: 'follow',
-                                                                    mode: 'cors',
-                                                                    credentials: 'include'
-                                                                };
-                                                                var TransferAID = result.data.aid
-                                                                fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID, requestOptions)
-                                                                    .then(response => response.json())
-                                                                    .then(result => {
-                                                                        if (result.code === 0) {
-                                                                            updateArticle(Article, result.data.banner_url)
-                                                                            var formdata = new FormData();
-                                                                            formdata.append("aid", TransferAID);
-                                                                            formdata.append("csrf", bili_jct);
-                                                                            fetch(proxy_domain + "/bilibili/member/x/web/draft/delete", {
-                                                                                method: 'POST',
-                                                                                body: formdata,
-                                                                                mode: 'cors',
-                                                                                credentials: 'include',
-                                                                                redirect: 'follow'
-                                                                            })
-
-                                                                        } else {
-                                                                            setAlertModalTitle("读取中转站信息失败")
-                                                                            setAlertModalInfo(result.message)
-                                                                            setAlertModalShowed(true)
-                                                                        }
-                                                                    })
-
-                                                            } else {
-                                                                setAlertModalTitle("上传图片到中转站失败")
-                                                                setAlertModalInfo(result.message)
-                                                                setAlertModalShowed(true)
-                                                            }
-                                                        })
-
-                                                } else if (data.code === -101) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                    setAlertModalShowed(true)
-
-                                                } else if (data.code === -111) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("bili_jct填写有误或已过期")
-                                                    setAlertModalShowed(true)
-                                                }
-
-                                            })
-                                    }} className="btn btn-secondary ">上传图片
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        {/*自定义头像上传*/}
                         <div className="card flex  flex-col bg-base-100  p-4 ">
                             <div className="text-xl flex  relative font-bold  gap-4">
                                 <div>自定义头像上传</div>
@@ -864,7 +721,7 @@ export default function Page() {
                                                 .then(result => {
                                                     if (result.code === 0) {
                                                         setAlertModalTitle("上传成功")
-                                                        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                                                        setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
                                                         setAlertModalShowed(true)
                                                     } else {
                                                         setAlertModalTitle("上传失败")
@@ -878,6 +735,528 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
+                        {/*视频合集动态封面上传*/}
+                        <div className="card flex  flex-col bg-base-100  p-4 ">
+                            <div className="text-xl flex  relative font-bold  gap-4">
+                                <div>视频合集动态封面上传</div>
+                                <div
+                                    className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                    <div className="badge  h-full   badge-accent">
+                                        提示
+                                    </div>
+                                    <div tabIndex={0}
+                                         className="dropdown-content card card-compact  w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
+                                        <div className="card-body ">
+                                            <div className="text-left ">
+                                                1.本工具不能上传动态头像，但是可以上传透明的PNG格式的图片，绕过B站上传头像的裁剪。
+                                            </div>
+                                            <div className="text-left ">
+                                                2.头像推荐分辨率为120x120;
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                className="flex  flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4">
+                                <div className="grid flex-grow place-items-center ">
+                                    <div className="card relative  overflow-hidden w-64 h-40 ">
+                                        <Image fill
+                                               loader={ImageLoader}
+                                               src={BiliVideoSeasonsCover}/>
+                                    </div>
+                                </div>
+
+                                <div className="flex  justify-center">
+                                    <input hidden
+                                           type="file"
+                                           ref={NewBiliVideoSeasonsCoverFileRef}
+                                           onChangeCapture={(e) => {
+                                               setBiliVideoSeasonsCover(URL.createObjectURL(e.target.files[0]))
+                                           }}
+                                    />
+                                    <select value={BiliSelectedVideoSeasons}
+                                            onChange={(e) => {
+                                                setBiliVideoSeasonsCover(BiliArticlesList[e.target.value].image_url);
+                                                setBiliSelectedVideoSeasons(e.target.value)
+                                            }} className="select select-secondary w-full max-w-xs">
+                                        <option disabled>请选择一个文集</option>
+                                        {BiliVideoSeasons.map((item, index) => (<option value={index}
+                                                                                        key={index}>{item.season.title}</option>))}
+                                    </select>
+                                </div>
+                                <div className="flex  justify-center  gap-4">
+                                    <div className="flex  justify-center">
+                                        <button onClick={(e) => {
+                                            NewBiliVideoSeasonsCoverFileRef.current.click();
+                                        }} className="btn btn-primary  ">选择图片
+                                        </button>
+                                    </div>
+                                    <button onClick={(e) => {
+
+                                        var formdata = new FormData();
+                                        formdata.append("bucket", "material_up");
+                                        formdata.append("dir", "");
+                                        formdata.append("file", NewBiliVideoSeasonsCoverFileRef.current.files[0]);
+                                        formdata.append("csrf", bili_jct);
+
+                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                            method: 'POST',
+                                            mode: 'cors',
+                                            body: formdata,
+                                            credentials: 'include',
+                                            redirect: 'follow'
+                                        })
+                                            .then((res) => res.json())
+                                            .then(data => {
+                                                if (data.code === 0 || data.code === 20414) {
+                                                    var VideoSeason = BiliVideoSeasons[BiliSelectedVideoSeasons]
+                                                    var myHeaders = new Headers();
+                                                    myHeaders.append("Content-Type", "application/json");
+                                                    var raw = JSON.stringify({
+                                                        "season": {
+                                                            "id": VideoSeason.season.id,
+                                                            "title": VideoSeason.season.title,
+                                                            "desc":  VideoSeason.season.desc,
+                                                            "cover": data.data.location,
+                                                            "isEnd":  VideoSeason.season.isEnd,
+                                                            "season_price": VideoSeason.season.season_price
+                                                        }
+                                                    });
+                                                    var requestOptions = {
+                                                        method: 'POST',
+                                                        body: raw,
+                                                        mode: 'cors',
+                                                        headers: myHeaders,
+                                                        credentials: 'include',
+                                                        redirect: 'follow'
+                                                    };
+
+                                                    fetch(proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf="+bili_jct, requestOptions)
+                                                        .then(response => response.json())
+                                                        .then(result => {
+                                                            if (result.code === 0) {
+                                                                setAlertModalTitle("上传成功")
+                                                                setAlertModalInfo("请到投稿页面查看上传结果。")
+                                                                setAlertModalShowed(true)
+                                                            } else {
+                                                                setAlertModalTitle("上传失败")
+                                                                setAlertModalInfo(result.message)
+                                                                setAlertModalShowed(true)
+                                                            }
+                                                        })
+
+                                                } else if (data.code === -101) {
+                                                    setAlertModalTitle("登录信息错误")
+                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                    setAlertModalShowed(true)
+
+                                                } else if (data.code === -111) {
+                                                    setAlertModalTitle("登录信息错误")
+                                                    setAlertModalInfo("bili_jct填写有误或已过期")
+                                                    setAlertModalShowed(true)
+                                                }
+
+                                            })
+                                    }} className="btn btn-secondary ">上传图片
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {/*专栏封面上传*/}
+                        <div className="card flex sm:col-span-3  flex-col bg-base-100   p-4  ">
+                            <div className="text-xl flex  relative font-bold  gap-4">
+                                <div>专栏动态封面上传</div>
+                                <div
+                                    className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                    <div className="badge  h-full  badge-accent">
+                                        提示
+                                    </div>
+                                    <div tabIndex={0}
+                                         className="dropdown-content card  card-compact w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
+                                        <div className="card-body ">
+                                            <div className="text-left ">
+                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
+                                            </div>
+                                            <div className="text-left ">
+                                                2.上传成功后请到投稿中心查看是否通过审核。
+                                            </div>
+                                            <div className="text-left ">
+                                                3.专栏封面推荐分辨率为640x288;专栏头图推荐分辨率为960x540;文集封面推荐分辨率为694x909。
+                                            </div>
+                                            <div className="text-left ">
+                                                4.建议在填写专栏的正式内容前就上传动态封面，预防数据丢失。
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row w-full mt-4 ">
+                                <div
+                                    className="flex  flex-col w-full relative sm:w-1/3 flex-grow overflow-hidden justify-center gap-4 ">
+                                    <div className="text-center  font-bold">
+                                        专栏封面
+                                    </div>
+                                    <div className="grid flex-grow place-items-center ">
+                                        <div className="card relative  overflow-hidden w-64 h-18-8 ">
+                                            <Image fill
+                                                   loader={ImageLoader}
+                                                   src={BiliArticleCover}/>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex  justify-center">
+                                        <input hidden
+                                               type="file"
+                                               ref={NewBiliArticleCoverFileRef}
+                                               onChangeCapture={(e) => {
+                                                   setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
+                                               }}
+                                        />
+                                        <select value={BiliSelectedArticleCover}
+                                                onChange={(e) => {
+                                                    console.log(BiliArticles[e.target.value])
+                                                    if (BiliArticles[e.target.value].image_urls[0] != null) setBiliArticleCover(BiliArticles[e.target.value].image_urls[0]);
+                                                    setBiliSelectedArticleCover(e.target.value)
+                                                }} className="select select-secondary w-full max-w-xs">
+                                            <option disabled>请选择一篇专栏</option>
+                                            {BiliArticles.map((item, index) => (<option value={index}
+                                                                                        key={index}>{item.publish_time != 0 ? "已发布" : "草稿箱"}-{item.title}</option>))}
+                                        </select>
+                                    </div>
+                                    <div className="flex  justify-center  gap-4">
+                                        <div className="flex  justify-center">
+                                            <button onClick={(e) => {
+                                                NewBiliArticleCoverFileRef.current.click();
+                                            }} className="btn btn-primary  ">选择图片
+                                            </button>
+                                        </div>
+                                        <button onClick={(e) => {
+
+                                            var formdata = new FormData();
+                                            formdata.append("bucket", "material_up");
+                                            formdata.append("dir", "");
+                                            formdata.append("file", NewBiliArticleCoverFileRef.current.files[0]);
+                                            formdata.append("csrf", bili_jct);
+
+                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                                method: 'POST',
+                                                mode: 'cors',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow'
+                                            })
+                                                .then((res) => res.json())
+                                                .then(data => {
+                                                    if (data.code === 0 || data.code === 20414) {
+                                                        var Article = BiliArticles[BiliSelectedArticleCover]
+
+                                                        var formdata = new FormData();
+                                                        formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
+                                                        formdata.append("banner_url", data.data.location);
+                                                        formdata.append("csrf", bili_jct);
+                                                        var requestOptions = {
+                                                            method: 'POST',
+                                                            body: formdata,
+                                                            mode: 'cors',
+                                                            credentials: 'include',
+                                                            redirect: 'follow'
+                                                        };
+
+                                                        fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate", requestOptions)
+                                                            .then(response => response.json())
+                                                            .then(result => {
+                                                                if (result.code === 0) {
+                                                                    var requestOptions = {
+                                                                        method: 'GET',
+                                                                        redirect: 'follow',
+                                                                        mode: 'cors',
+                                                                        credentials: 'include'
+                                                                    };
+                                                                    var TransferAID = result.data.aid
+                                                                    fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID, requestOptions)
+                                                                        .then(response => response.json())
+                                                                        .then(result => {
+                                                                            if (result.code === 0) {
+                                                                                updateArticle(Article, result.data.banner_url, 0)
+                                                                                var formdata = new FormData();
+                                                                                formdata.append("aid", TransferAID);
+                                                                                formdata.append("csrf", bili_jct);
+                                                                                fetch(proxy_domain + "/bilibili/member/x/web/draft/delete", {
+                                                                                    method: 'POST',
+                                                                                    body: formdata,
+                                                                                    mode: 'cors',
+                                                                                    credentials: 'include',
+                                                                                    redirect: 'follow'
+                                                                                })
+
+                                                                            } else {
+                                                                                setAlertModalTitle("读取中转站信息失败")
+                                                                                setAlertModalInfo(result.message)
+                                                                                setAlertModalShowed(true)
+                                                                            }
+                                                                        })
+
+                                                                } else {
+                                                                    setAlertModalTitle("上传图片到中转站失败")
+                                                                    setAlertModalInfo(result.message)
+                                                                    setAlertModalShowed(true)
+                                                                }
+                                                            })
+
+                                                    } else if (data.code === -101) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                        setAlertModalShowed(true)
+
+                                                    } else if (data.code === -111) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("bili_jct填写有误或已过期")
+                                                        setAlertModalShowed(true)
+                                                    }
+
+                                                })
+                                        }} className="btn btn-secondary ">上传图片
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="divider divider-horizontal"/>
+                                <div className="divider sm:hidden"/>
+                                <div
+                                    className="flex  flex-col w-full relative sm:w-1/3 flex-grow overflow-hidden justify-center gap-4 ">
+                                    <div className="text-center  font-bold">
+                                        专栏头图
+                                    </div>
+                                    <div className="grid flex-grow place-items-center ">
+                                        <div className="card relative  overflow-hidden w-80 h-45 ">
+                                            <Image fill
+                                                   loader={ImageLoader}
+                                                   src={BiliArticleHeader}/>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex  justify-center">
+                                        <input hidden
+                                               type="file"
+                                               ref={NewBiliArticleHeaderFileRef}
+                                               onChangeCapture={(e) => {
+                                                   setBiliArticleHeader(URL.createObjectURL(e.target.files[0]))
+                                               }}
+                                        />
+                                        <select value={BiliSelectedArticleHeader}
+                                                onChange={(e) => {
+                                                    if (BiliArticles[e.target.value].banner_url !== "") setBiliArticleHeader(BiliArticles[e.target.value].banner_url);
+                                                    setBiliSelectedArticleHeader(e.target.value)
+                                                }} className="select select-secondary w-full max-w-xs">
+                                            <option disabled>请选择一篇专栏</option>
+                                            {BiliArticles.map((item, index) => (<option value={index}
+                                                                                        key={index}>{item.publish_time != 0 ? "已发布" : "草稿箱"}-{item.title}</option>))}
+                                        </select>
+                                    </div>
+                                    <div className="flex  justify-center  gap-4">
+                                        <div className="flex  justify-center">
+                                            <button onClick={(e) => {
+                                                NewBiliArticleHeaderFileRef.current.click();
+                                            }} className="btn btn-primary  ">选择图片
+                                            </button>
+                                        </div>
+                                        <button onClick={(e) => {
+
+                                            var formdata = new FormData();
+                                            formdata.append("bucket", "material_up");
+                                            formdata.append("dir", "");
+                                            formdata.append("file", NewBiliArticleHeaderFileRef.current.files[0]);
+                                            formdata.append("csrf", bili_jct);
+
+                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                                method: 'POST',
+                                                mode: 'cors',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow'
+                                            })
+                                                .then((res) => res.json())
+                                                .then(data => {
+                                                    if (data.code === 0 || data.code === 20414) {
+                                                        var Article = BiliArticles[BiliSelectedArticleHeader]
+
+                                                        var formdata = new FormData();
+                                                        formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
+                                                        formdata.append("banner_url", data.data.location);
+                                                        formdata.append("csrf", bili_jct);
+                                                        var requestOptions = {
+                                                            method: 'POST',
+                                                            body: formdata,
+                                                            mode: 'cors',
+                                                            credentials: 'include',
+                                                            redirect: 'follow'
+                                                        };
+
+                                                        fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate", requestOptions)
+                                                            .then(response => response.json())
+                                                            .then(result => {
+                                                                if (result.code === 0) {
+                                                                    var requestOptions = {
+                                                                        method: 'GET',
+                                                                        redirect: 'follow',
+                                                                        mode: 'cors',
+                                                                        credentials: 'include'
+                                                                    };
+                                                                    var TransferAID = result.data.aid
+                                                                    fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID, requestOptions)
+                                                                        .then(response => response.json())
+                                                                        .then(result => {
+                                                                            if (result.code === 0) {
+                                                                                updateArticle(Article, result.data.banner_url, 1)
+                                                                                var formdata = new FormData();
+                                                                                formdata.append("aid", TransferAID);
+                                                                                formdata.append("csrf", bili_jct);
+                                                                                fetch(proxy_domain + "/bilibili/member/x/web/draft/delete", {
+                                                                                    method: 'POST',
+                                                                                    body: formdata,
+                                                                                    mode: 'cors',
+                                                                                    credentials: 'include',
+                                                                                    redirect: 'follow'
+                                                                                })
+
+                                                                            } else {
+                                                                                setAlertModalTitle("读取中转站信息失败")
+                                                                                setAlertModalInfo(result.message)
+                                                                                setAlertModalShowed(true)
+                                                                            }
+                                                                        })
+
+                                                                } else {
+                                                                    setAlertModalTitle("上传图片到中转站失败")
+                                                                    setAlertModalInfo(result.message)
+                                                                    setAlertModalShowed(true)
+                                                                }
+                                                            })
+
+                                                    } else if (data.code === -101) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                        setAlertModalShowed(true)
+
+                                                    } else if (data.code === -111) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("bili_jct填写有误或已过期")
+                                                        setAlertModalShowed(true)
+                                                    }
+
+                                                })
+                                        }} className="btn btn-secondary ">上传图片
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="divider divider-horizontal"/>
+                                <div className="divider sm:hidden"/>
+                                <div
+                                    className="flex  flex-col w-full relative sm:w-1/3 flex-grow overflow-hidden justify-center gap-4 ">
+                                    <div className="text-center  font-bold">
+                                        文集封面
+                                    </div>
+                                    <div className="grid flex-grow place-items-center ">
+                                        <div className="card relative  overflow-hidden w-56 h-72 ">
+                                            <Image fill
+                                                   loader={ImageLoader}
+                                                   src={BiliArticleListCover}/>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex  justify-center">
+                                        <input hidden
+                                               type="file"
+                                               ref={NewBiliArticleListCoverFileRef}
+                                               onChangeCapture={(e) => {
+                                                   setBiliArticleListCover(URL.createObjectURL(e.target.files[0]))
+                                               }}
+                                        />
+                                        <select value={BiliSelectedArticleList}
+                                                onChange={(e) => {
+                                                    setBiliArticleListCover(BiliArticlesList[e.target.value].image_url);
+                                                    setBiliSelectedArticleList(e.target.value)
+                                                }} className="select select-secondary w-full max-w-xs">
+                                            <option disabled>请选择一个文集</option>
+                                            {BiliArticlesList.map((item, index) => (<option value={index}
+                                                                                        key={index}>{item.name}</option>))}
+                                        </select>
+                                    </div>
+                                    <div className="flex  justify-center  gap-4">
+                                        <div className="flex  justify-center">
+                                            <button onClick={(e) => {
+                                                NewBiliArticleListCoverFileRef.current.click();
+                                            }} className="btn btn-primary  ">选择图片
+                                            </button>
+                                        </div>
+                                        <button onClick={(e) => {
+
+                                            var formdata = new FormData();
+                                            formdata.append("bucket", "material_up");
+                                            formdata.append("dir", "");
+                                            formdata.append("file", NewBiliArticleListCoverFileRef.current.files[0]);
+                                            formdata.append("csrf", bili_jct);
+
+                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                                method: 'POST',
+                                                mode: 'cors',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow'
+                                            })
+                                                .then((res) => res.json())
+                                                .then(data => {
+                                                    if (data.code === 0 || data.code === 20414) {
+                                                        var ArticleList = BiliArticlesList[BiliSelectedArticleList]
+
+                                                        var formdata = new FormData();
+                                                        formdata.append("list_id", ArticleList.id);
+                                                        formdata.append("name", ArticleList.name);
+                                                        formdata.append("summary", ArticleList.summary);
+                                                        formdata.append("image_url", data.data.location);
+                                                        formdata.append("only_list", "true");
+                                                        formdata.append("csrf", bili_jct);
+                                                        var requestOptions = {
+                                                            method: 'POST',
+                                                            body: formdata,
+                                                            mode: 'cors',
+                                                            credentials: 'include',
+                                                            redirect: 'follow'
+                                                        };
+
+                                                        fetch(proxy_domain + "/bilibili/api/x/article/creative/list/update", requestOptions)
+                                                            .then(response => response.json())
+                                                            .then(result => {
+                                                                if (result.code === 0) {
+                                                                    setAlertModalTitle("上传成功")
+                                                                    setAlertModalInfo("请到投稿页面查看上传结果。")
+                                                                    setAlertModalShowed(true)
+                                                                } else {
+                                                                    setAlertModalTitle("上传失败")
+                                                                    setAlertModalInfo(result.message)
+                                                                    setAlertModalShowed(true)
+                                                                }
+                                                            })
+
+                                                    } else if (data.code === -101) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                        setAlertModalShowed(true)
+
+                                                    } else if (data.code === -111) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("bili_jct填写有误或已过期")
+                                                        setAlertModalShowed(true)
+                                                    }
+
+                                                })
+                                        }} className="btn btn-secondary ">上传图片
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {/*直播间动态封面上传*/}
                         <div className="card sm:col-span-3 bg-base-100  p-4  ">
                             <div className="text-xl flex  relative font-bold ">
                                 <div>直播间动态封面上传</div>

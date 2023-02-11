@@ -18,7 +18,7 @@ export default function Footer() {
                         <a className="link link-hover" href="https://github.com/JonyanDunh">
                             Github</a>
                         <a className="link link-hover" href="https://qm.qq.com/cgi-bin/qm/qr?k=z39BIZPI-C3JtIRkEtvGUoZO55sajWNu&jump_from=webapi&authKey=KEVEguvjK2KPfQBgsV5Y35dtZ0dTnhQS7RlXRAVwokMmMk2zdLsO2cCY/jZXb3jA">
-                            交流群</a>
+                            粉丝群</a>
                     </div>
                     </div>
                     <div>
