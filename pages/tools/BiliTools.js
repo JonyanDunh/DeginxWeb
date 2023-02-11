@@ -3,7 +3,7 @@ import Image from 'next/image'
 import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
-
+import Head from 'next/head'
 var UrlDecode = require('url');
 
 
@@ -55,12 +55,12 @@ export default function Page() {
     const [BiliVideoSeasons, setBiliVideoSeasons] = useState([])
     const [BiliMusicCompilations, setBiliMusicCompilations] = useState([])
     const [BiliMusics, setBiliMusics] = useState([])
-    const [BiliArticleListCover, setBiliArticleListCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
-    const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
+    const [BiliArticleListCover, setBiliArticleListCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
+    const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/new_dyn/62fb62b00d7bc22bcee25edd1014a1c26823116.jpg@1554w.webp");
     const [BiliArticleHeader, setBiliArticleHeader] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliVideoSeasonsCover, setBiliVideoSeasonsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
-    const [BiliMusicCompilationsCover, setBiliMusicCompilationsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
-    const [BiliMusicCover, setBiliMusicCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
+    const [BiliMusicCompilationsCover, setBiliMusicCompilationsCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
+    const [BiliMusicCover, setBiliMusicCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
     const [BiliSelectedArticleList, setBiliSelectedArticleList] = useState(0);
     const [BiliSelectedArticleCover, setBiliSelectedArticleCover] = useState(0);
     const [BiliSelectedArticleHeader, setBiliSelectedArticleHeader] = useState(0);
@@ -660,6 +660,10 @@ export default function Page() {
             </div>)}
         page=
             {(<div>
+                    <Head>
+                        <link rel="icon" type="image/x-icon" href="https://message.biliimg.com/bfs/im/d4397121cbf9b41269c03758bfeafb696ca2d0e1.png" />
+                        <title>哔哩哔哩工具箱 - DeginX</title>
+                    </Head>
                     <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
                         {/*用户须知*/}
                         <div className="card  flex  flex-col bg-base-100   p-4  overflow-scroll max-h-128">
