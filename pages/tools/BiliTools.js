@@ -5,8 +5,9 @@ import React, {useState, useEffect} from 'react'
 import {useRouter} from 'next/router'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
-
 var UrlDecode = require('url');
+
+
 
 function base64ToFile(base64, fileName) {
     let arr = base64.split(",");
@@ -418,7 +419,7 @@ export default function Page() {
                     </div>
                     <div className="grid flex-grow place-items-center">
                         <div
-                            className={` relative  overflow-hidden ${isQrcodeFailed ? "filter blur-lg" : ""} `}>
+                            className={` relative card overflow-hidden ${isQrcodeFailed ? "filter blur-lg" : ""} `}>
                             <Canvas
                                 text={BiliLoginQrcode}
                                 options={{
@@ -495,11 +496,11 @@ export default function Page() {
                         <input value={SESSDATA} onChange={e => {
                             setSESSDATA(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="SESSDATA"
-                               className="input input-bordered input-primary w-full max-w-xs"/>
+                               className="input input-bordered input-accent w-full max-w-xs"/>
                         <input value={bili_jct} onChange={e => {
                             setbili_jct(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="bili_jct"
-                               className="input input-bordered input-secondary w-full max-w-xs"/>
+                               className="input input-bordered input-accent w-full max-w-xs"/>
                         <input value={DedeUserID} onChange={e => {
                             setDedeUserID(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="DedeUserID"
@@ -507,7 +508,7 @@ export default function Page() {
                         <input value={DedeUserID__ckMd5} onChange={e => {
                             setDedeUserID__ckMd5(decodeURIComponent(e.currentTarget.value));
                         }} type="text" placeholder="DedeUserID__ckMd5"
-                               className="input input-bordered input-info w-full max-w-xs"/>
+                               className="input input-bordered input-accent w-full max-w-xs"/>
 
                         <div className="flex  justify-center">
                             <button disabled={!isConfirmedRule} onClick={BiliLoginClickHandler}

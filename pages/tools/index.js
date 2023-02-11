@@ -69,7 +69,7 @@ export default  function Page() {
         return () => {
             router.events.off('routeChangeComplete', handleRouteChange)
         }
-    }, [])
+    }, [router.isReady])
     useEffect(() => {
         //alert(router.pathname)
     }, [router.query])

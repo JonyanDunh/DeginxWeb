@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import {useRouter} from 'next/router'
 import React, {useState, useEffect} from 'react'
-import { themeChange } from 'theme-change'
+import {themeChange} from 'theme-change'
+
 export default function Navbar({}) {
     const router = useRouter()
     useEffect(() => {
@@ -48,7 +49,7 @@ export default function Navbar({}) {
                             className="dropdown-content bg-base-200 text-base-content rounded-t-box rounded-b-box top-px max-h-96 h-[70vh] w-52 overflow-y-auto shadow-2xl mt-16">
                             <div className="grid grid-cols-1 gap-3 p-3" tabIndex="0">
                                 <div
-                                    className="outline-base-content overflow-hidden rounded-lg outline-2 outline-offset-2 outline"
+                                    className="outline-base-content overflow-hidden rounded-lg outline-2 outline-offset-2 "
                                     data-set-theme="light" data-act-class="outline">
                                     <div data-theme="light"
                                          className="bg-base-100 text-base-content w-full cursor-pointer font-sans">
@@ -84,7 +85,7 @@ export default function Navbar({}) {
                                     </div>
                                 </div>
                                 <div
-                                    className="outline-base-content overflow-hidden rounded-lg outline-2 outline-offset-2"
+                                    className="outline-base-content overflow-hidden rounded-lg outline-2 outline-offset-2 outline"
                                     data-set-theme="cupcake" data-act-class="outline">
                                     <div data-theme="cupcake"
                                          className="bg-base-100 text-base-content w-full cursor-pointer font-sans">
