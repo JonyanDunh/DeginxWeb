@@ -20,9 +20,9 @@ function base64ToFile(base64, fileName) {
 }
 
 export default function Page() {
-    //const proxy_domain = "https://proxy.deginx.com"
-    const proxy_domain = "/proxy"
-    const domain = ""
+    const proxy_domain = "https://proxy.deginx.com"
+    //const proxy_domain = "/proxy"
+    const domain = ".deginx.com"
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
