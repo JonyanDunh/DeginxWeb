@@ -23,6 +23,10 @@ module.exports = {
         source: '/proxy/bilibili/api/:path*',
         destination: 'https://proxy.deginx.com/bilibili/api/:path*',
       },
+      {
+        source: '/proxy/bilibili/index/:path*',
+        destination: 'https://proxy.deginx.com/bilibili/index/:path*',
+      },
     ]
   },
   images: {

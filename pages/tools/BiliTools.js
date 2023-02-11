@@ -53,14 +53,20 @@ export default function Page() {
     const [BiliArticles, setBiliArticles] = useState([])
     const [BiliArticlesList, setBiliArticlesList] = useState([])
     const [BiliVideoSeasons, setBiliVideoSeasons] = useState([])
+    const [BiliMusicCompilations, setBiliMusicCompilations] = useState([])
+    const [BiliMusics, setBiliMusics] = useState([])
     const [BiliArticleListCover, setBiliArticleListCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliArticleHeader, setBiliArticleHeader] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliVideoSeasonsCover, setBiliVideoSeasonsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
+    const [BiliMusicCompilationsCover, setBiliMusicCompilationsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
+    const [BiliMusicCover, setBiliMusicCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliSelectedArticleList, setBiliSelectedArticleList] = useState(0);
     const [BiliSelectedArticleCover, setBiliSelectedArticleCover] = useState(0);
     const [BiliSelectedArticleHeader, setBiliSelectedArticleHeader] = useState(0);
     const [BiliSelectedVideoSeasons, setBiliSelectedVideoSeasons] = useState(0);
+    const [BiliSelectedMusicCompilations, setBiliSelectedMusicCompilations] = useState(0);
+    const [BiliSelectedMusic, setBiliSelectedMusic] = useState(0);
     const NewBiliArticleListCoverFileRef = React.useRef();
     const NewBiliVideoSeasonsCoverFileRef = React.useRef();
     const NewBiliArticleCoverFileRef = React.useRef();
@@ -69,6 +75,8 @@ export default function Page() {
     const NewBiliLiveroomCoverVerticalFileRef = React.useRef();
     const NewBiliLiveroomShowCoverFileRef = React.useRef();
     const NewBiliUserFaceFileRef = React.useRef();
+    const NewBiliMusicCompilationsCoverFileRef = React.useRef();
+    const NewBiliMusicCoverFileRef = React.useRef();
     const [BiliToolsUserCounts, setBiliToolsUserCounts] = useState(0);
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
     const AlertRef = React.useRef();
@@ -175,6 +183,26 @@ export default function Page() {
                 if (result.code===0 && result.data.seasons!=null){
                     setBiliVideoSeasons(result.data.seasons)
                     setBiliVideoSeasonsCover(result.data.seasons[0].season.cover)
+                }
+            })
+        fetch(proxy_domain + "/bilibili/index/audio/music-service/compilation?page_size=50", {
+            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code===0 && result.data.list!=null){
+                    setBiliMusicCompilations(result.data.list)
+                    setBiliMusicCompilationsCover(result.data.list[0].cover_url)
+                }
+            })
+        fetch(proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/query/new?page_size=50&ctime=0", {
+            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code===0 && result.data.list!=null){
+                    setBiliMusics(result.data.list)
+                    setBiliMusicCover(result.data.list[0].cover_url)
                 }
             })
         var formdata = new FormData();
@@ -664,7 +692,7 @@ export default function Page() {
                                 <div
                                     className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                     <div className="badge  h-full   badge-accent">
-                                        提示
+                                        注意事项
                                     </div>
                                     <div tabIndex={0}
                                          className="dropdown-content card card-compact  w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
@@ -742,16 +770,23 @@ export default function Page() {
                                 <div
                                     className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                     <div className="badge  h-full   badge-accent">
-                                        提示
+                                        注意事项
                                     </div>
                                     <div tabIndex={0}
                                          className="dropdown-content card card-compact  w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
                                         <div className="card-body ">
                                             <div className="text-left ">
-                                                1.本工具不能上传动态头像，但是可以上传透明的PNG格式的图片，绕过B站上传头像的裁剪。
+                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过3MB。
                                             </div>
                                             <div className="text-left ">
-                                                2.头像推荐分辨率为120x120;
+                                                2.上传成功后请到投稿中心查看是否通过审核。
+                                            </div>
+                                            <div className="text-left ">
+                                                3.封面推荐分辨率为960x600或480x300。
+
+                                            </div>
+                                            <div className="text-left ">
+                                                4.上传后请检查视频的投稿信息有无丢失，因为很多参数在上传动态封面时没有和视频同步
                                             </div>
                                         </div>
                                     </div>
@@ -780,7 +815,7 @@ export default function Page() {
                                                 setBiliVideoSeasonsCover(BiliArticlesList[e.target.value].image_url);
                                                 setBiliSelectedVideoSeasons(e.target.value)
                                             }} className="select select-secondary w-full max-w-xs">
-                                        <option disabled>请选择一个文集</option>
+                                        <option disabled>请选择一个合集</option>
                                         {BiliVideoSeasons.map((item, index) => (<option value={index}
                                                                                         key={index}>{item.season.title}</option>))}
                                     </select>
@@ -863,14 +898,14 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
-                        {/*专栏封面上传*/}
+                        {/*专栏动态图片上传*/}
                         <div className="card flex sm:col-span-3  flex-col bg-base-100   p-4  ">
                             <div className="text-xl flex  relative font-bold  gap-4">
-                                <div>专栏动态封面上传</div>
+                                <div>专栏动态图片上传</div>
                                 <div
                                     className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                     <div className="badge  h-full  badge-accent">
-                                        提示
+                                        注意事项
                                     </div>
                                     <div tabIndex={0}
                                          className="dropdown-content card  card-compact w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
@@ -886,6 +921,9 @@ export default function Page() {
                                             </div>
                                             <div className="text-left ">
                                                 4.建议在填写专栏的正式内容前就上传动态封面，预防数据丢失。
+                                            </div>
+                                            <div className="text-left ">
+                                                5.上传后请检查视频的投稿信息有无丢失，因为很多参数在上传动态封面时没有和视频同步
                                             </div>
                                         </div>
                                     </div>
@@ -1263,7 +1301,7 @@ export default function Page() {
                                 <div
                                     className="dropdown absolute right-0 h-full dropdown-top dropdown-end flex justify-self-end  dropdown-hover ">
                                     <div className="badge  h-full  badge-accent">
-                                        提示
+                                        注意事项
                                     </div>
                                     <div tabIndex={0}
                                          className="dropdown-content  card card-compact w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
@@ -1570,6 +1608,263 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
+                        {/*音频动态图片上传*/}
+                        <div className="card flex sm:col-span-2  flex-col bg-base-100   p-4  ">
+                            <div className="text-xl flex  relative font-bold  gap-4">
+                                <div>音频动态图片上传</div>
+                                <div
+                                    className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                    <div className="badge  h-full  badge-accent">
+                                        注意事项
+                                    </div>
+                                    <div tabIndex={0}
+                                         className="dropdown-content card  card-compact w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
+                                        <div className="card-body ">
+                                            <div className="text-left ">
+                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过5MB。
+                                            </div>
+                                            <div className="text-left ">
+                                                2.上传成功后请到投稿中心查看是否通过审核。
+                                            </div>
+                                            <div className="text-left ">
+                                                3.音频单曲及音频合辑推荐分辨率为240x240。
+                                            </div>
+                                            <div className="text-left ">
+                                                4.建议在填写歌曲的正式信息前就上传动态封面，预防数据丢失。
+                                            </div>
+                                            <div className="text-left ">
+                                                5.上传后请检查视频的投稿信息有无丢失，因为很多参数在上传动态封面时没有同步。
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row w-full mt-4 ">
+                                <div
+                                    className="flex  flex-col w-full relative sm:w-1/2 flex-grow overflow-hidden justify-center gap-4 ">
+                                    <div className="text-center  font-bold">
+                                        音频单曲
+                                    </div>
+                                    <div className="grid flex-grow place-items-center ">
+                                        <div className="card relative  overflow-hidden w-45 h-45 ">
+                                            <Image fill
+                                                   loader={ImageLoader}
+                                                   src={BiliMusicCover}/>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex  justify-center">
+                                        <input hidden
+                                               type="file"
+                                               ref={NewBiliMusicCoverFileRef}
+                                               onChangeCapture={(e) => {
+                                                   setBiliMusicCover(URL.createObjectURL(e.target.files[0]))
+                                               }}
+                                        />
+                                        <select value={BiliSelectedMusic}
+                                                onChange={(e) => {
+                                                    if (BiliMusics[e.target.value].banner_url !== "") setBiliMusicCover(BiliArticles[e.target.value].banner_url);
+                                                    setBiliSelectedMusic(e.target.value)
+                                                }} className="select select-secondary w-full max-w-xs">
+                                            <option disabled>请选择一首音乐</option>
+                                            {BiliMusics.map((item, index) => (<option value={index}
+                                                                                        key={index}>{item.title}</option>))}
+                                        </select>
+                                    </div>
+                                    <div className="flex  justify-center  gap-4">
+                                        <div className="flex  justify-center">
+                                            <button onClick={(e) => {
+                                                NewBiliMusicCoverFileRef.current.click();
+                                            }} className="btn btn-primary  ">选择图片
+                                            </button>
+                                        </div>
+                                        <button onClick={(e) => {
+
+                                            var formdata = new FormData();
+                                            formdata.append("bucket", "material_up");
+                                            formdata.append("dir", "");
+                                            formdata.append("file", NewBiliMusicCoverFileRef.current.files[0]);
+                                            formdata.append("csrf", bili_jct);
+
+                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                                method: 'POST',
+                                                mode: 'cors',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow'
+                                            })
+                                                .then((res) => res.json())
+                                                .then(data => {
+                                                    if (data.code === 0 || data.code === 20414) {
+                                                        var Article = BiliMusics[BiliSelectedMusic]
+
+                                                        var myHeaders = new Headers();
+                                                        myHeaders.append("Content-Type", "application/json");
+
+                                                        var raw = JSON.stringify({
+                                                            "lyric_url": checkDataNull(Article.lyric_url),
+                                                            "cover_url": data.data.location,
+                                                            "song_id": Article.song_id,
+                                                            "album_id": checkDataNull(Article.album_id),
+                                                            "mid": Article.mid,
+                                                            "origin_title": checkDataNull(Article.origin_title),
+                                                            "origin_url": checkDataNull(Article.origin_url),
+                                                            "avid":checkDataNull(Article.avid),
+                                                            "tid": checkDataNull(Article.tid),
+                                                            "cid": checkDataNull(Article.cid),
+                                                            "intro": checkDataNull(Article.intro),
+                                                            "activity_id": checkDataNull(Article.activity_id),
+                                                            "is_bgm": 1,
+                                                            "title": checkDataNull(Article.title)
+                                                        });
+
+                                                        var requestOptions = {
+                                                            method: 'PUT',
+                                                            headers: myHeaders,
+                                                            body: raw,
+                                                            redirect: 'follow'
+                                                        };
+
+                                                        fetch(proxy_domain+"/bilibili/index/audio/music-service/createcenter/songs/3755913", requestOptions)
+                                                            .then(response => response.json())
+                                                            .then(result => {
+                                                                if (result.code === 0) {
+                                                                    setAlertModalTitle("上传成功")
+                                                                    setAlertModalInfo("请到投稿页面查看上传结果。")
+                                                                    setAlertModalShowed(true)
+                                                                } else {
+                                                                    setAlertModalTitle("上传失败")
+                                                                    setAlertModalInfo(result.message)
+                                                                    setAlertModalShowed(true)
+                                                                }
+                                                            })
+
+                                                    } else if (data.code === -101) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                        setAlertModalShowed(true)
+
+                                                    } else if (data.code === -111) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("bili_jct填写有误或已过期")
+                                                        setAlertModalShowed(true)
+                                                    }
+
+                                                })
+                                        }} className="btn btn-secondary ">上传图片
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="divider divider-horizontal"/>
+                                <div className="divider sm:hidden"/>
+                                <div
+                                    className="flex  flex-col w-full relative sm:w-1/2 flex-grow overflow-hidden justify-center gap-4 ">
+                                    <div className="text-center  font-bold">
+                                        音频合辑
+                                    </div>
+                                    <div className="grid flex-grow place-items-center ">
+                                        <div className="card relative  overflow-hidden w-45 h-45 ">
+                                            <Image fill
+                                                   loader={ImageLoader}
+                                                   src={BiliMusicCompilationsCover}/>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex  justify-center">
+                                        <input hidden
+                                               type="file"
+                                               ref={NewBiliMusicCompilationsCoverFileRef}
+                                               onChangeCapture={(e) => {
+                                                   setBiliMusicCompilationsCover(URL.createObjectURL(e.target.files[0]))
+                                               }}
+                                        />
+                                        <select value={BiliSelectedMusicCompilations}
+                                                onChange={(e) => {
+                                                    setBiliMusicCompilationsCover(BiliArticlesList[e.target.value].image_url);
+                                                    setBiliSelectedMusicCompilations(e.target.value)
+                                                }} className="select select-secondary w-full max-w-xs">
+                                            <option disabled>请选择一个合辑</option>
+                                            {BiliMusicCompilations.map((item, index) => (<option value={index}
+                                                                                            key={index}>{item.title}</option>))}
+                                        </select>
+                                    </div>
+                                    <div className="flex  justify-center  gap-4">
+                                        <div className="flex  justify-center">
+                                            <button onClick={(e) => {
+                                                NewBiliMusicCompilationsCoverFileRef.current.click();
+                                            }} className="btn btn-primary  ">选择图片
+                                            </button>
+                                        </div>
+                                        <button onClick={(e) => {
+
+                                            var formdata = new FormData();
+                                            formdata.append("bucket", "material_up");
+                                            formdata.append("dir", "");
+                                            formdata.append("file", NewBiliMusicCompilationsCoverFileRef.current.files[0]);
+                                            formdata.append("csrf", bili_jct);
+
+                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                                method: 'POST',
+                                                mode: 'cors',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow'
+                                            })
+                                                .then((res) => res.json())
+                                                .then(data => {
+                                                    if (data.code === 0 || data.code === 20414) {
+                                                        var MusicCompilation = BiliMusicCompilations[BiliSelectedMusicCompilations]
+                                                        var myHeaders = new Headers();
+                                                        myHeaders.append("Content-Type", "application/json");
+                                                        var raw = JSON.stringify({
+                                                            "compilation_id": MusicCompilation.compilation_id,
+                                                            "cover_url": data.data.location,
+                                                            "is_synch": 0,
+                                                            "intro": data.data.intro,
+                                                            "title": data.data.title
+                                                        });
+                                                        var requestOptions = {
+                                                            method: 'POST',
+                                                            headers: myHeaders,
+                                                            body: raw,
+                                                            mode: 'cors',
+                                                            credentials: 'include',
+                                                            redirect: 'follow'
+                                                        };
+
+                                                        fetch(proxy_domain + "/bilibili/index/audio/music-service/compilation/update_compilation", requestOptions)
+                                                            .then(response => response.json())
+                                                            .then(result => {
+                                                                if (result.code === 0) {
+                                                                    setAlertModalTitle("上传成功")
+                                                                    setAlertModalInfo("请到投稿页面查看上传结果。")
+                                                                    setAlertModalShowed(true)
+                                                                } else {
+                                                                    setAlertModalTitle("上传失败")
+                                                                    setAlertModalInfo(result.message)
+                                                                    setAlertModalShowed(true)
+                                                                }
+                                                            })
+
+                                                    } else if (data.code === -101) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                        setAlertModalShowed(true)
+
+                                                    } else if (data.code === -111) {
+                                                        setAlertModalTitle("登录信息错误")
+                                                        setAlertModalInfo("bili_jct填写有误或已过期")
+                                                        setAlertModalShowed(true)
+                                                    }
+
+                                                })
+                                        }} className="btn btn-secondary ">上传图片
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                     <div ref={AlertRef} className="toast toast-end">
 
