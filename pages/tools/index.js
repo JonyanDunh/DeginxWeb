@@ -76,7 +76,7 @@ export default  function Page() {
     if (isLoadingTools||isLoadingLeftMenuItems||!tools||!LeftMenuItems) return <Layout_sticky_navbar
         MenuItems={
             (
-                <ul className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2 rounded-lg shadow">
+                <ul className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2  ">
 
                 </ul>
             )
@@ -89,14 +89,14 @@ export default  function Page() {
         <Layout_sticky_navbar
             MenuItems={
                 (
-                    <ul className="menu  md:flex bg-base-100 sm:w-72  w-full  p-2 rounded-lg shadow">
+                    <ul className="menu rounded-box md:flex bg-base-100 sm:w-72  w-full  p-2 ">
                         {LeftMenuItems.map((item) => (
                             <Link key={item.ItemType}  href={item.ItemLink}>
                                 <li>
                                     <div className={item.ItemType==thisItemType?"active":""}>
                                         {item.ItemName}
                                         <div
-                                            className="badge badge-secondary absolute  right-4">{item.ItemChildAmount}</div>
+                                            className="badge badge-accent absolute  right-4">{item.ItemChildAmount}</div>
                                     </div>
                                 </li>
                             </Link>)
@@ -109,9 +109,9 @@ export default  function Page() {
                 <div className="flex flex-wrap  justify-center sm:justify-start  gap-4 ">
                     {tools.data.map((tool) => (
                         <div key={tool.map.ItemUUID}
-                             className="card rounded-lg flex-shrink flex-grow w-36 sm:w-72 sm:flex-grow-0 bg-base-100 shadow ">
+                             className="card  flex-shrink flex-grow w-36 sm:w-72 sm:flex-grow-0 bg-base-100  ">
                             <figure>
-                                <div className="rounded-lg relative  overflow-hidden aspect-w-16 aspect-h-10 w-full">
+                                <div className=" relative  overflow-hidden aspect-w-16 aspect-h-10 w-full">
                                     <Image fill
                                            loader={ItemImgLoader}
                                            src={tool.map.ItemImg}
@@ -123,7 +123,7 @@ export default  function Page() {
                                 <div className="line-clamp-2 sm:text-center">{tool.map.ItemDescribe}</div>
                                 <div className="card-actions justify-center ">
                                     <Link  href={`/tools/${tool.map.ItemShortName}`}>
-                                        <button disabled={tool.map.disabled} className="btn btn-primary ">立即使用
+                                        <button disabled={tool.map.disabled} className="btn btn-secondary ">立即使用
                                         </button>
                                     </Link>
                                 </div>

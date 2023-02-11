@@ -8,7 +8,7 @@ export default function Layout_fixed_navbar({page}) {
                 <Navbar links="fuck"/>
             </div>
             <div className="content w-full flex flex-wrap sm:flex-nowrap">
-                <div className="sm:static sm:w-full  right-content  overflow-auto rounded-lg">
+                <div className="sm:static sm:w-full  right-content  overflow-auto">
                     <main>{page}</main>
                 </div>
             </div>

@@ -1,8 +1,7 @@
 export default function Footer() {
     return (
         <>
-            <div id="footer" className="w-full  ">
-                <footer className="footer p-10   bg-base-200 rounded-lg mb-4 shadow">
+                <footer className="footer rounded-box p-10 bg-base-100  mb-4 ">
                     <div>
                         <svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
                              fillRule="evenodd" clipRule="evenodd" className="fill-current">
@@ -12,33 +11,21 @@ export default function Footer() {
                         <p>DeginX Industries Ltd.<br/>Providing reliable tech since 2018</p>
                     </div>
                     <div>
-                    <span className="footer-title">Social</span>
-                    <div className="grid grid-flow-col grid-cols-4 grid-rows-3 gap-3">
-                        <a href="https://space.bilibili.com/96876893">
-                            Bilibili</a>
-                        <a href="https://github.com/JonyanDunh">
+                    <span className="footer-title">社交媒体</span>
+                    <div className="grid grid-flow-col  gap-4">
+                        <a className="link link-hover" href="https://space.bilibili.com/96876893">
+                            哔哩哔哩</a>
+                        <a className="link link-hover" href="https://github.com/JonyanDunh">
                             Github</a>
-                        <a href="https://discord.gg/JonyanDunh#1782">
-                            Discord</a>
-                        <a href="https://facebook.com/jonyandunh">
-                            Facebook</a>
-                        <a href="https://reddit.com/user/JonyanDunh">
-                            Reddit</a>
-                        <a href="https://stackoverflow.com/users/19812300">
-                            Stack Overflow</a>
-                        <a href="https://twitch.tv/jonyandunh">
-                            Twitch</a>
-                        <a href="https://twitter.com/jonyandunh">
-                            Twitter</a>
-                        <a href="https://youtube.com/@jonyandunh">
-                            YouTube</a>
-                        <a href="https://dev.to/jonyandunh">
-                            DEV.TO</a>
-                        <a href="https://www.kaggle.com/jonyandunh">
-                            Kaggle</a>
-                        <a href="https://ko-fi.com/jonyandunh">
-                            Ko-Fi</a>
+                        <a className="link link-hover" href="https://qm.qq.com/cgi-bin/qm/qr?k=z39BIZPI-C3JtIRkEtvGUoZO55sajWNu&jump_from=webapi&authKey=KEVEguvjK2KPfQBgsV5Y35dtZ0dTnhQS7RlXRAVwokMmMk2zdLsO2cCY/jZXb3jA">
+                            交流群</a>
                     </div>
+                    </div>
+                    <div>
+                        <span className="footer-title">本站开源地址</span>
+                        <div className="grid grid-flow-col gap-4">
+                            <a className="link link-hover" href="https://github.com/JonyanDunh/DeginxWeb" target="_blank"
+                               rel="noreferrer">JonyanDunh/DeginxWeb</a></div>
                     </div>
                     <div>
                         <span className="footer-title">ICP备案/许可证号</span>
@@ -47,7 +34,6 @@ export default function Footer() {
                                rel="noreferrer">粤ICP备2023004043号</a></div>
                     </div>
                 </footer>
-            </div>
         </>
     )
 }
