@@ -214,7 +214,7 @@ export default function Page() {
             method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
         })
 
-        let aids = ["686513406", "686310130", "597420690", "971878849", "667881688"]
+        let aids = ["949195634", "524192527", "394193741", "971878849", "667881688"]
         aids.map((aid, index) => {
             var formdata = new FormData();
             formdata.append("aid", aid);
@@ -225,7 +225,7 @@ export default function Page() {
 
             var formdata = new FormData();
             formdata.append("aid", aid);
-            formdata.append("played_time", Math.round(Math.random() * (40 - 10)) + 10);
+            formdata.append("played_time", Math.round(Math.random() * (250 - 100)) + 100);
             fetch(proxy_domain + "/bilibili/api/x/click-interface/web/heartbeat", {
                 method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
             })
