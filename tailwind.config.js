@@ -8,10 +8,16 @@ module.exports = {
         ],
     },
     theme: {
-        extend: {},
-        maxHeight: {
-            '128': '32rem',
-        },
+        extend: {maxHeight: {
+                '128': '32rem',
+            },
+            width: {
+                '45': '11.25rem',
+            },
+            height: {
+                '45': '11.25rem',
+            }},
+
     },
     plugins: [
         require("daisyui"),
