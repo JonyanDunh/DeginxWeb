@@ -4,6 +4,7 @@ import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 import Head from 'next/head'
+
 var UrlDecode = require('url');
 
 
@@ -20,11 +21,12 @@ function base64ToFile(base64, fileName) {
 }
 
 export default function Page() {
-    const proxy_domain = "https://proxy.deginx.com"
-    //const proxy_domain = "/proxy"
-    const domain = ".deginx.com"
+    //const proxy_domain = "https://proxy.deginx.com"
+    const proxy_domain = "/proxy"
+    const domain = ""
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
+    const [JonyanFans, setJonyanFans] = useState("")
     const [AlertModalInfo, setAlertModalInfo] = useState("")
     const [AlertModalTitle, setAlertModalTitle] = useState("")
     const [isBiliLogin, setBiliLogin] = useState(false)
@@ -171,11 +173,11 @@ export default function Page() {
         })
             .then(response => response.json())
             .then(result => {
-               if (result.code===0 && result.data.lists!=null){
-                setBiliArticlesList(result.data.lists)
-                   if(result.data.lists[0].image_url!=="")
-                       setBiliArticleListCover(result.data.lists[0].image_url)
-               }
+                if (result.code === 0 && result.data.lists != null) {
+                    setBiliArticlesList(result.data.lists)
+                    if (result.data.lists[0].image_url !== "")
+                        setBiliArticleListCover(result.data.lists[0].image_url)
+                }
             })
 
         fetch(proxy_domain + "/bilibili/member/x2/creative/web/seasons?pn=1&ps=30&order=mtime&sort=desc&draft=1", {
@@ -183,7 +185,7 @@ export default function Page() {
         })
             .then(response => response.json())
             .then(result => {
-                if (result.code===0 && result.data.seasons!=null){
+                if (result.code === 0 && result.data.seasons != null) {
                     setBiliVideoSeasons(result.data.seasons)
                     setBiliVideoSeasonsCover(result.data.seasons[0].season.cover)
                 }
@@ -193,17 +195,17 @@ export default function Page() {
         })
             .then(response => response.json())
             .then(result => {
-                if (result.code===0 && result.data.list!=null){
+                if (result.code === 0 && result.data.list != null) {
                     setBiliMusicCompilations(result.data.list)
                     setBiliMusicCompilationsCover(result.data.list[0].cover_url)
                 }
             })
-        fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/created/list?pn=1&ps=50&up_mid="+Cookies.get("DedeUserID")+"&jsonp=jsonp", {
+        fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/created/list?pn=1&ps=50&up_mid=" + Cookies.get("DedeUserID") + "&jsonp=jsonp", {
             method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
         })
             .then(response => response.json())
             .then(result => {
-                if (result.code===0 && result.data.list!=null){
+                if (result.code === 0 && result.data.list != null) {
                     setBiliFolders(result.data.list)
                     setBiliFolderCover(result.data.list[0].cover)
                 }
@@ -213,7 +215,7 @@ export default function Page() {
         })
             .then(response => response.json())
             .then(result => {
-                if (result.code===0 && result.data.list!=null){
+                if (result.code === 0 && result.data.list != null) {
                     setBiliMusics(result.data.list)
                     setBiliMusicCover(result.data.list[0].cover_url)
                 }
@@ -263,6 +265,16 @@ export default function Page() {
     }
 
     useEffect(() => {
+        fetch(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893", {
+            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 0) {
+                    setJonyanFans(result.data.follower)
+                }
+
+            })
         fetch("http://proxy.deginx.com/bilibili/tools/UserCounts/", {
             method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
         })
@@ -643,8 +655,48 @@ export default function Page() {
         MenuItems=
             {(<div className="left_content  sm:static">
                 {isBiliLogin ? bilibili_profile : bilibili_login}
-                <div className="stats  flex flex-col mt-4  bg-base-100">
+                <a href="https://space.bilibili.com/96876893" className="stats shadow  mt-4 flex flex-row">
+
+
                     <div className="stat">
+                        <div className="stat-figure text-secondary">
+                            <div className="avatar ">
+                                <div className="w-16 rounded-full">
+                                    <img src="https://i2.hdslb.com/bfs/face/dfc20ec4a6e62d1604d55be06ce4ff6977a6e8dc.png" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="stat-value text-primary">{JonyanFans}</div>
+                        <div className="stat-title">粉丝</div>
+                        <div className="stat-desc text-secondary font-bold">哔哩哔哩：JONYANDUNH</div>
+                    </div>
+                </a>
+                <a href="https://github.com/JonyanDunh/DeginxWeb"
+                   className=" card mt-4 bg-base-100 p-4 flex flex-row">
+                    <div className="avatar ">
+                        <div className="w-24 rounded-box">
+                            <img
+                                src="https://i0.hdslb.com/bfs/live/show_cover/2251b19b90aac7e10ce04d8cd1be9279925db993.jpg"/>
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <div className="flex flex-row">
+                            <p className="ml-3">
+                                <span className="text-primary font-semibold">JonyanDunh/</span>
+                                <br></br>
+                                <span className="text-secondary font-semibold">DeginxWeb</span>
+                            </p>
+                        </div>
+                        <div className="flex flex-row">
+                            <p className="ml-3 text-xs">
+                                About
+                                The official website of DEGINX rebuilds with React...
+                            </p>
+                        </div>
+                    </div>
+                </a>
+                <div className="stats  flex flex-col mt-4  bg-base-100">
+                    <div className="stat p-4">
                         <div className="stat-figure text-accent">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  className="inline-block w-8 h-8 stroke-current">
@@ -687,7 +739,8 @@ export default function Page() {
         page=
             {(<div>
                     <Head>
-                        <link rel="icon" type="image/x-icon" href="https://message.biliimg.com/bfs/im/d4397121cbf9b41269c03758bfeafb696ca2d0e1.png" />
+                        <link rel="icon" type="image/x-icon"
+                              href="https://message.biliimg.com/bfs/im/d4397121cbf9b41269c03758bfeafb696ca2d0e1.png"/>
                         <title>哔哩哔哩工具箱 - DeginX</title>
                     </Head>
                     <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
@@ -883,9 +936,9 @@ export default function Page() {
                                                         "season": {
                                                             "id": VideoSeason.season.id,
                                                             "title": VideoSeason.season.title,
-                                                            "desc":  VideoSeason.season.desc,
+                                                            "desc": VideoSeason.season.desc,
                                                             "cover": data.data.location,
-                                                            "isEnd":  VideoSeason.season.isEnd,
+                                                            "isEnd": VideoSeason.season.isEnd,
                                                             "season_price": VideoSeason.season.season_price
                                                         }
                                                     });
@@ -898,7 +951,7 @@ export default function Page() {
                                                         redirect: 'follow'
                                                     };
 
-                                                    fetch(proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf="+bili_jct, requestOptions)
+                                                    fetch(proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf=" + bili_jct, requestOptions)
                                                         .then(response => response.json())
                                                         .then(result => {
                                                             if (result.code === 0) {
@@ -1248,7 +1301,7 @@ export default function Page() {
                                                 }} className="select select-secondary w-full max-w-xs">
                                             <option disabled>请选择一个文集</option>
                                             {BiliArticlesList.map((item, index) => (<option value={index}
-                                                                                        key={index}>{item.name}</option>))}
+                                                                                            key={index}>{item.name}</option>))}
                                         </select>
                                     </div>
                                     <div className="flex  justify-center  gap-4">
@@ -1699,7 +1752,7 @@ export default function Page() {
                                                 }} className="select select-secondary w-full max-w-xs">
                                             <option disabled>请选择一首音乐</option>
                                             {BiliMusics.map((item, index) => (<option value={index}
-                                                                                        key={index}>{item.title}</option>))}
+                                                                                      key={index}>{item.title}</option>))}
                                         </select>
                                     </div>
                                     <div className="flex  justify-center  gap-4">
@@ -1740,7 +1793,7 @@ export default function Page() {
                                                             "mid": Article.mid,
                                                             "origin_title": checkDataNull(Article.origin_title),
                                                             "origin_url": checkDataNull(Article.origin_url),
-                                                            "avid":checkDataNull(Article.avid),
+                                                            "avid": checkDataNull(Article.avid),
                                                             "tid": checkDataNull(Article.tid),
                                                             "cid": checkDataNull(Article.cid),
                                                             "intro": checkDataNull(Article.intro),
@@ -1756,7 +1809,7 @@ export default function Page() {
                                                             redirect: 'follow'
                                                         };
 
-                                                        fetch(proxy_domain+"/bilibili/index/audio/music-service/createcenter/songs/3755913", requestOptions)
+                                                        fetch(proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/3755913", requestOptions)
                                                             .then(response => response.json())
                                                             .then(result => {
                                                                 if (result.code === 0) {
@@ -1816,7 +1869,7 @@ export default function Page() {
                                                 }} className="select select-secondary w-full max-w-xs">
                                             <option disabled>请选择一个合辑</option>
                                             {BiliMusicCompilations.map((item, index) => (<option value={index}
-                                                                                            key={index}>{item.title}</option>))}
+                                                                                                 key={index}>{item.title}</option>))}
                                         </select>
                                     </div>
                                     <div className="flex  justify-center  gap-4">
@@ -1950,7 +2003,7 @@ export default function Page() {
                                             }} className="select select-secondary w-full max-w-xs">
                                         <option disabled>请选择一个合集</option>
                                         {BiliFolders.map((item, index) => (<option value={index}
-                                                                                        key={index}>{item.title}</option>))}
+                                                                                   key={index}>{item.title}</option>))}
                                     </select>
                                 </div>
                                 <div className="flex  justify-center  gap-4">
