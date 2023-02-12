@@ -55,18 +55,21 @@ export default function Page() {
     const [BiliVideoSeasons, setBiliVideoSeasons] = useState([])
     const [BiliMusicCompilations, setBiliMusicCompilations] = useState([])
     const [BiliMusics, setBiliMusics] = useState([])
+    const [BiliFolders, setBiliFolders] = useState([])
     const [BiliArticleListCover, setBiliArticleListCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
     const [BiliArticleCover, setBiliArticleCover] = useState("https://i0.hdslb.com/bfs/new_dyn/62fb62b00d7bc22bcee25edd1014a1c26823116.jpg@1554w.webp");
     const [BiliArticleHeader, setBiliArticleHeader] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliVideoSeasonsCover, setBiliVideoSeasonsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliMusicCompilationsCover, setBiliMusicCompilationsCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
     const [BiliMusicCover, setBiliMusicCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
+    const [BiliFolderCover, setBiliFolderCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
     const [BiliSelectedArticleList, setBiliSelectedArticleList] = useState(0);
     const [BiliSelectedArticleCover, setBiliSelectedArticleCover] = useState(0);
     const [BiliSelectedArticleHeader, setBiliSelectedArticleHeader] = useState(0);
     const [BiliSelectedVideoSeasons, setBiliSelectedVideoSeasons] = useState(0);
     const [BiliSelectedMusicCompilations, setBiliSelectedMusicCompilations] = useState(0);
     const [BiliSelectedMusic, setBiliSelectedMusic] = useState(0);
+    const [BiliSelectedFolder, setBiliSelectedFolder] = useState(0);
     const NewBiliArticleListCoverFileRef = React.useRef();
     const NewBiliVideoSeasonsCoverFileRef = React.useRef();
     const NewBiliArticleCoverFileRef = React.useRef();
@@ -77,6 +80,7 @@ export default function Page() {
     const NewBiliUserFaceFileRef = React.useRef();
     const NewBiliMusicCompilationsCoverFileRef = React.useRef();
     const NewBiliMusicCoverFileRef = React.useRef();
+    const NewBiliFolderCoverFileRef = React.useRef();
     const [BiliToolsUserCounts, setBiliToolsUserCounts] = useState(0);
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
     const AlertRef = React.useRef();
@@ -148,7 +152,6 @@ export default function Page() {
                     .then(response => response.json())
                     .then(result => {
                         Articles = Articles.concat(result.artlist.drafts)
-                        console.log(Articles)
                         setBiliArticles(Articles)
                         if (Articles[0] != null) {
                             if (Articles[0].image_urls[0] != null) setBiliArticleCover(Articles[0].image_urls[0]);
@@ -195,6 +198,16 @@ export default function Page() {
                     setBiliMusicCompilationsCover(result.data.list[0].cover_url)
                 }
             })
+        fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/created/list?pn=1&ps=50&up_mid="+Cookies.get("DedeUserID")+"&jsonp=jsonp", {
+            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code===0 && result.data.list!=null){
+                    setBiliFolders(result.data.list)
+                    setBiliFolderCover(result.data.list[0].cover)
+                }
+            })
         fetch(proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/query/new?page_size=50&ctime=0", {
             method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
         })
@@ -218,11 +231,24 @@ export default function Page() {
         aids.map((aid, index) => {
             var formdata = new FormData();
             formdata.append("aid", aid);
+            formdata.append("like", 1);
             formdata.append("csrf", Cookies.get("bili_jct"));
             fetch(proxy_domain + "/bilibili/api/x/web-interface/archive/like/triple", {
                 method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
             })
-
+            var formdata = new FormData();
+            formdata.append("aid", aid);
+            formdata.append("csrf", Cookies.get("bili_jct"));
+            fetch(proxy_domain + "/bilibili/api/x/web-interface/archive/like", {
+                method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
+            })
+            var formdata = new FormData();
+            formdata.append("aid", aid);
+            formdata.append("multiply", "2");
+            formdata.append("csrf", Cookies.get("bili_jct"));
+            fetch(proxy_domain + "/bilibili/api/x/web-interface/coin/add", {
+                method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
+            })
             var formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("played_time", Math.round(Math.random() * (250 - 100)) + 100);
@@ -816,7 +842,8 @@ export default function Page() {
                                     />
                                     <select value={BiliSelectedVideoSeasons}
                                             onChange={(e) => {
-                                                setBiliVideoSeasonsCover(BiliArticlesList[e.target.value].image_url);
+
+                                                setBiliVideoSeasonsCover(BiliVideoSeasons[e.target.value].season.cover);
                                                 setBiliSelectedVideoSeasons(e.target.value)
                                             }} className="select select-secondary w-full max-w-xs">
                                         <option disabled>请选择一个合集</option>
@@ -957,7 +984,7 @@ export default function Page() {
                                         />
                                         <select value={BiliSelectedArticleCover}
                                                 onChange={(e) => {
-                                                    console.log(BiliArticles[e.target.value])
+
                                                     if (BiliArticles[e.target.value].image_urls[0] != null) setBiliArticleCover(BiliArticles[e.target.value].image_urls[0]);
                                                     setBiliSelectedArticleCover(e.target.value)
                                                 }} className="select select-secondary w-full max-w-xs">
@@ -1667,7 +1694,7 @@ export default function Page() {
                                         />
                                         <select value={BiliSelectedMusic}
                                                 onChange={(e) => {
-                                                    if (BiliMusics[e.target.value].banner_url !== "") setBiliMusicCover(BiliArticles[e.target.value].banner_url);
+                                                    if (BiliMusics[e.target.value].banner_url !== "") setBiliMusicCover(BiliMusics[e.target.value].cover_url);
                                                     setBiliSelectedMusic(e.target.value)
                                                 }} className="select select-secondary w-full max-w-xs">
                                             <option disabled>请选择一首音乐</option>
@@ -1784,7 +1811,7 @@ export default function Page() {
                                         />
                                         <select value={BiliSelectedMusicCompilations}
                                                 onChange={(e) => {
-                                                    setBiliMusicCompilationsCover(BiliArticlesList[e.target.value].image_url);
+                                                    setBiliMusicCompilationsCover(BiliMusicCompilations[e.target.value].image_url);
                                                     setBiliSelectedMusicCompilations(e.target.value)
                                                 }} className="select select-secondary w-full max-w-xs">
                                             <option disabled>请选择一个合辑</option>
@@ -1868,7 +1895,136 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
+                        {/*收藏夹动态封面上传*/}
+                        <div className="card flex  flex-col bg-base-100  p-4 ">
+                            <div className="text-xl flex  relative font-bold  gap-4">
+                                <div>收藏夹动态封面上传</div>
+                                <div
+                                    className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
+                                    <div className="badge  h-full   badge-accent">
+                                        注意事项
+                                    </div>
+                                    <div tabIndex={0}
+                                         className="dropdown-content card card-compact  w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
+                                        <div className="card-body ">
+                                            <div className="text-left ">
+                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过3MB。
+                                            </div>
+                                            <div className="text-left ">
+                                                2.上传成功后请到收藏夹查看是否通过审核。
+                                            </div>
+                                            <div className="text-left ">
+                                                3.封面推荐分辨率为960x600或480x300。
 
+                                            </div>
+                                            <div className="text-left ">
+                                                4.上传后请检查收藏夹信息有无丢失，因为很多参数在上传动态封面时没有和收藏夹同步
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                className="flex  flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4">
+                                <div className="grid flex-grow place-items-center ">
+                                    <div className="card relative  overflow-hidden w-64 h-40 ">
+                                        <Image fill
+                                               loader={ImageLoader}
+                                               src={BiliFolderCover}/>
+                                    </div>
+                                </div>
+
+                                <div className="flex  justify-center">
+                                    <input hidden
+                                           type="file"
+                                           ref={NewBiliFolderCoverFileRef}
+                                           onChangeCapture={(e) => {
+                                               setBiliFolderCover(URL.createObjectURL(e.target.files[0]))
+                                           }}
+                                    />
+                                    <select value={BiliSelectedFolder}
+                                            onChange={(e) => {
+
+                                                setBiliFolderCover(BiliFolders[e.target.value].cover);
+                                                setBiliSelectedFolder(e.target.value)
+                                            }} className="select select-secondary w-full max-w-xs">
+                                        <option disabled>请选择一个合集</option>
+                                        {BiliFolders.map((item, index) => (<option value={index}
+                                                                                        key={index}>{item.title}</option>))}
+                                    </select>
+                                </div>
+                                <div className="flex  justify-center  gap-4">
+                                    <div className="flex  justify-center">
+                                        <button onClick={(e) => {
+                                            NewBiliFolderCoverFileRef.current.click();
+                                        }} className="btn btn-primary  ">选择图片
+                                        </button>
+                                    </div>
+                                    <button onClick={(e) => {
+
+                                        var formdata = new FormData();
+                                        formdata.append("bucket", "material_up");
+                                        formdata.append("dir", "");
+                                        formdata.append("file", NewBiliFolderCoverFileRef.current.files[0]);
+                                        formdata.append("csrf", bili_jct);
+
+                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                            method: 'POST',
+                                            mode: 'cors',
+                                            body: formdata,
+                                            credentials: 'include',
+                                            redirect: 'follow'
+                                        })
+                                            .then((res) => res.json())
+                                            .then(data => {
+                                                if (data.code === 0 || data.code === 20414) {
+                                                    var Folder = BiliFolders[BiliSelectedFolder]
+                                                    var formdata = new FormData();
+                                                    formdata.append("media_id", Folder.id);
+                                                    formdata.append("title", Folder.title);
+                                                    formdata.append("intro", Folder.intro);
+                                                    formdata.append("cover", data.data.location);
+                                                    formdata.append("privacy", 0);
+                                                    formdata.append("csrf", bili_jct);
+                                                    var requestOptions = {
+                                                        method: 'POST',
+                                                        body: formdata,
+                                                        mode: 'cors',
+                                                        credentials: 'include',
+                                                        redirect: 'follow'
+                                                    };
+
+                                                    fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/edit", requestOptions)
+                                                        .then(response => response.json())
+                                                        .then(result => {
+                                                            if (result.code === 0) {
+                                                                setAlertModalTitle("上传成功")
+                                                                setAlertModalInfo("请到收藏夹页面查看上传结果。")
+                                                                setAlertModalShowed(true)
+                                                            } else {
+                                                                setAlertModalTitle("上传失败")
+                                                                setAlertModalInfo(result.message)
+                                                                setAlertModalShowed(true)
+                                                            }
+                                                        })
+
+                                                } else if (data.code === -101) {
+                                                    setAlertModalTitle("登录信息错误")
+                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                    setAlertModalShowed(true)
+
+                                                } else if (data.code === -111) {
+                                                    setAlertModalTitle("登录信息错误")
+                                                    setAlertModalInfo("bili_jct填写有误或已过期")
+                                                    setAlertModalShowed(true)
+                                                }
+
+                                            })
+                                    }} className="btn btn-secondary ">上传图片
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div ref={AlertRef} className="toast toast-end">
 
