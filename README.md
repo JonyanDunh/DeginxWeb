@@ -3,7 +3,8 @@
   <p align="center">
     The official website of DEGINX rebuilds with React, NEXT.js and Daisy UI, and it contains some of the new technology which can generate some pages needed by inbound requests and fluently deal with user's requests etc. I devote myself to making it become a generic framework of a website.
     <br/>
-    <br/>
+   <br/>
+   <a href="https://www.deginx.com/tools/BiliTools"><strong>View demo »</strong></a>
   </p>
 
 ![Contributors](https://img.shields.io/github/contributors/JonyanDunh/DeginxWeb?color=dark-green) ![Forks](https://img.shields.io/github/forks/JonyanDunh/DeginxWeb?style=social) ![Stargazers](https://img.shields.io/github/stars/JonyanDunh/DeginxWeb?style=social) ![Issues](https://img.shields.io/github/issues/JonyanDunh/DeginxWeb) ![License](https://img.shields.io/github/license/JonyanDunh/DeginxWeb) 
