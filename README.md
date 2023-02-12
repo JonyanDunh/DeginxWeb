@@ -25,13 +25,11 @@
 
 **Tools page:**
 
-![tools.png](https://github.com/JonyanDunh/DeginxWeb/blob/main/Preview/tools.png?raw=true)
-
-![](https://github.com/JonyanDunh/DeginxWeb/blob/main/Preview/bilibili_tools.jpeg?raw=true
+![tools.png](https://github.com/JonyanDunh/DeginxWeb/blob/main/Preview/tools.jpeg?raw=true)
 
 **Bilibili tools page:**
 
-![bilibili_tools.jpeg](https://github.com/JonyanDunh/DeginxWeb/blob/main/Preview/bilibili_tools.jpeg?raw=true)
+![bilibili_tools.jpeg](https://github.com/JonyanDunh/DeginxWeb/blob/main/Preview/BiliTools.jpeg?raw=true)
 
 ## Getting Started
 
