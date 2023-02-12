@@ -4,9 +4,8 @@ import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 import Head from 'next/head'
-
 var UrlDecode = require('url');
-
+import useSWR,{ mutate } from 'swr'
 
 function base64ToFile(base64, fileName) {
     let arr = base64.split(",");
@@ -64,7 +63,7 @@ export default function Page() {
     const [BiliVideoSeasonsCover, setBiliVideoSeasonsCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliMusicCompilationsCover, setBiliMusicCompilationsCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
     const [BiliMusicCover, setBiliMusicCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
-    const [BiliFolderCover, setBiliFolderCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png");
+    const [BiliFolderCover, setBiliFolderCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp");
     const [BiliSelectedArticleList, setBiliSelectedArticleList] = useState(0);
     const [BiliSelectedArticleCover, setBiliSelectedArticleCover] = useState(0);
     const [BiliSelectedArticleHeader, setBiliSelectedArticleHeader] = useState(0);
@@ -86,7 +85,21 @@ export default function Page() {
     const [BiliToolsUserCounts, setBiliToolsUserCounts] = useState(0);
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
     const AlertRef = React.useRef();
-
+    var getQrcodeInfoTimes=0
+    const fetcher = url => fetch(url).then(r => r.json())
+    const BiliQrcodeDataFetcher = async (config) => {
+        var urlencoded = new URLSearchParams();
+        urlencoded.append("oauthKey", config.oauthKey);
+        const res = await fetch(config.url,{
+            method: 'POST', body: urlencoded
+        })
+        getQrcodeInfoTimes+=1
+        if(getQrcodeInfoTimes>=5)
+            setQrcodeFailed(true)
+        return res.json()
+    }
+    const { data:BiliQrcodeData,  isLoading:isBiliQrcodeDataLoading } = useSWR(!(Cookies.get("isBiliLogin") === "true")?proxy_domain + "/bilibili/passport/qrcode/getLoginUrl":null, fetcher)
+    const { data:BiliQrcodeScanData, isLoading:isBiliQrcodeScanDataLoading} = useSWR(!(Cookies.get("isBiliLogin") === "true")?(!isBiliQrcodeDataLoading&&!isQrcodeLogin&&!isQrcodeFailed?{url:proxy_domain + "/bilibili/passport/qrcode/getLoginInfo",oauthKey:BiliQrcodeData.data.oauthKey}:null):null,BiliQrcodeDataFetcher, { refreshInterval: 1000 })
     function clearCookie() {
         Cookies.remove("SESSDATA", {"path": "/", domain: domain})
         Cookies.remove("bili_jct", {"path": "/", domain: domain})
@@ -263,7 +276,6 @@ export default function Page() {
     const ImageLoader = ({src}) => {
         return src
     }
-
     useEffect(() => {
         fetch(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893", {
             method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
@@ -302,47 +314,7 @@ export default function Page() {
                     } else clearCookie()
                 })
 
-        } else fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginUrl")
-            .then((res) => res.json())
-            .then((data) => {
-                setBiliLoginQrcode(data.data.url)
-                let time = 0;
-                const CheckScanStatusID = setInterval(() => {
-                    time++
-                    var urlencoded = new URLSearchParams();
-                    urlencoded.append("oauthKey", data.data.oauthKey);
-                    fetch(proxy_domain + "/bilibili/passport/qrcode/getLoginInfo", {
-                        method: 'POST', body: urlencoded
-                    })
-                        .then((res) => res.json())
-                        .then((data) => {
-
-                            switch (data.data) {
-                                case -4:
-                                    setBiliQrcodeInfo("请使用哔哩哔哩手机客户端扫码登录");
-                                    break;
-                                case -5:
-                                    setBiliQrcodeInfo("扫码成功,请在手机点击登录");
-                                    break;
-                            }
-                            if (data.status) {
-                                clearInterval(CheckScanStatusID)
-                                var url = UrlDecode.parse(data.data.url, true)
-                                setQrcodeLogin(true)
-                                setSESSDATA(url.query.SESSDATA)
-                                setbili_jct(url.query.bili_jct)
-                                setDedeUserID(url.query.DedeUserID)
-                                setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
-                            }
-                            if (time >= 90) {
-                                setQrcodeFailed(true)
-                                clearInterval(CheckScanStatusID)
-                            }
-
-                        })
-                }, 1000);
-                //clearInterval(CheckScanStatusID)
-            })
+        }
     }, [])
 
     function BiliLoginClickHandler() {
@@ -383,7 +355,14 @@ export default function Page() {
     function checkDataNull(data) {
         return data == null ? "" : data
     }
-
+    function QrcodeLoginSuccess(){
+        setQrcodeLogin(true)
+        var url = UrlDecode.parse(BiliQrcodeScanData.data.url, true)
+        setSESSDATA(url.query.SESSDATA)
+        setbili_jct(url.query.bili_jct)
+        setDedeUserID(url.query.DedeUserID)
+        setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
+    }
     function updateArticle(Article, ImageUrl, type) {
         var UpdateArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/update" : proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate"
 
@@ -551,9 +530,10 @@ export default function Page() {
                 </div>
                 <div className="grid flex-grow place-items-center">
                     <div
+
                         className={` relative card overflow-hidden ${isQrcodeFailed ? "filter blur-lg" : ""} `}>
                         <Canvas
-                            text={BiliLoginQrcode}
+                            text={BiliQrcodeData?.data?.url?BiliQrcodeData?.data?.url:"https://space.bilibili.com/96876893"}
                             options={{
                                 level: 'H', scale: 4, width: 4, color: {
                                     dark: '#ff6b81', light: '#dff9fb',
@@ -561,7 +541,6 @@ export default function Page() {
                             }}
                         />
                     </div>
-
                 </div>
                 {!isQrcodeFailed ? <div>
                     {!isQrcodeLogin ? <div className="alert bg-neutral text-neutral-content -lg">
@@ -572,7 +551,8 @@ export default function Page() {
                                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <div>
-                                <div>{BiliQrcodeInfo}</div>
+                                <div>{!isBiliQrcodeScanDataLoading?(BiliQrcodeScanData?.data===-4)?"请使用哔哩哔哩手机客户端扫码登录":(BiliQrcodeScanData?.data===-5?"扫码成功,请在手机点击登录":BiliQrcodeScanData?.message):"正在获取登录二维码..."}</div>
+                                    {BiliQrcodeScanData?.status?QrcodeLoginSuccess():""}
                             </div>
                         </div>
 
@@ -584,6 +564,7 @@ export default function Page() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
+
                             <span>获取Cookie成功!请点击下方登录!</span>
                         </div>
                     </div>}
@@ -642,7 +623,7 @@ export default function Page() {
                         <label className="cursor-pointer label text-center">
                                 <span
                                     className="label-text mr-4  font-bold">已确保我已阅读用户须知<br/>并接受全部内容</span>
-                            <input onChangeCapture={(e) => {
+                            <input onChange={(e) => {
                                 setConfirmedRule(e.target.checked)
                             }} checked={isConfirmedRule} type="checkbox" className="checkbox checkbox-error"/>
                         </label>
@@ -655,7 +636,8 @@ export default function Page() {
         MenuItems=
             {(<div className="left_content  sm:static">
                 {isBiliLogin ? bilibili_profile : bilibili_login}
-                <a href="https://space.bilibili.com/96876893" className="stats shadow  mt-4 flex flex-row">
+                <a target="_blank"
+                   rel="noreferrer" href="https://space.bilibili.com/96876893" className="stats shadow  mt-4 flex flex-row">
 
 
                     <div className="stat">
@@ -671,7 +653,8 @@ export default function Page() {
                         <div className="stat-desc text-secondary font-bold">哔哩哔哩：JONYANDUNH</div>
                     </div>
                 </a>
-                <a href="https://github.com/JonyanDunh/DeginxWeb"
+                <a href="https://github.com/JonyanDunh/DeginxWeb" target="_blank"
+                   rel="noreferrer"
                    className=" card mt-4 bg-base-100 p-4 flex flex-row">
                     <div className="avatar ">
                         <div className="w-24 rounded-box">
@@ -768,10 +751,10 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
-                        {/*自定义头像上传*/}
+                        {/*收藏夹动态封面上传*/}
                         <div className="card flex  flex-col bg-base-100  p-4 ">
                             <div className="text-xl flex  relative font-bold  gap-4">
-                                <div>自定义头像上传</div>
+                                <div>收藏夹动态封面上传</div>
                                 <div
                                     className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                     <div className="badge  h-full   badge-accent">
@@ -781,68 +764,124 @@ export default function Page() {
                                          className="dropdown-content card card-compact  w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
                                         <div className="card-body ">
                                             <div className="text-left ">
-                                                1.本工具不能上传动态头像，但是可以上传透明的PNG格式的图片，绕过B站上传头像的裁剪。
+                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过3MB。
                                             </div>
                                             <div className="text-left ">
-                                                2.头像推荐分辨率为120x120;
+                                                2.上传成功后请到收藏夹查看是否通过审核。
+                                            </div>
+                                            <div className="text-left ">
+                                                3.封面推荐分辨率为960x600或480x300。
+
+                                            </div>
+                                            <div className="text-left ">
+                                                4.上传后请检查收藏夹信息有无丢失，因为很多参数在上传动态封面时没有和收藏夹同步
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div
-                                className="flex flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4">
-                                <div className="avatar grid flex-grow place-items-center">
-                                    <div className="card  relative  overflow-hidden w-48 h-48 ">
-                                        <img fill
-                                             src={BiliUserFace}/>
+                                className="flex  flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4">
+                                <div className="grid flex-grow place-items-center ">
+                                    <div className="card relative  overflow-hidden w-64 h-40 ">
+                                        <Image fill
+                                               loader={ImageLoader}
+                                               src={BiliFolderCover}
+                                               alt=""
+                                               unoptimized
+                                               property="true"
+                                        />
                                     </div>
                                 </div>
-                                <input hidden
-                                       type="file"
-                                       ref={NewBiliUserFaceFileRef}
-                                       onChangeCapture={(e) => {
-                                           setBiliUserFace(URL.createObjectURL(e.target.files[0]))
-                                       }}
-                                />
-                                <div className="flex  justify-center gap-4">
-                                    <div>
-                                        <button className="btn btn-primary" onClick={(e) => {
-                                            NewBiliUserFaceFileRef.current.click();
-                                        }}>选择图片
+
+                                <div className="flex  justify-center">
+                                    <input hidden
+                                           type="file"
+                                           ref={NewBiliFolderCoverFileRef}
+                                           onChangeCapture={(e) => {
+                                               setBiliFolderCover(URL.createObjectURL(e.target.files[0]))
+                                           }}
+                                    />
+                                    <select value={BiliSelectedFolder}
+                                            onChange={(e) => {
+
+                                                setBiliFolderCover(BiliFolders[e.target.value].cover);
+                                                setBiliSelectedFolder(e.target.value)
+                                            }} className="select select-secondary w-full max-w-xs">
+                                        <option disabled>请选择一个合集</option>
+                                        {BiliFolders.map((item, index) => (<option value={index}
+                                                                                   key={index}>{item.title}</option>))}
+                                    </select>
+                                </div>
+                                <div className="flex  justify-center  gap-4">
+                                    <div className="flex  justify-center">
+                                        <button onClick={(e) => {
+                                            NewBiliFolderCoverFileRef.current.click();
+                                        }} className="btn btn-primary  ">选择图片
                                         </button>
                                     </div>
-                                    <div>
-                                        <button className="btn btn-secondary" onClick={(e) => {
-                                            var formdata = new FormData();
-                                            formdata.append("dopost", "save");
-                                            formdata.append("DisplayRank", "1000");
-                                            formdata.append("face", NewBiliUserFaceFileRef.current.files[0]);
-                                            var requestOptions = {
-                                                method: 'POST',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow',
-                                                mode: 'cors'
+                                    <button onClick={(e) => {
 
-                                            };
+                                        var formdata = new FormData();
+                                        formdata.append("bucket", "material_up");
+                                        formdata.append("dir", "");
+                                        formdata.append("file", NewBiliFolderCoverFileRef.current.files[0]);
+                                        formdata.append("csrf", bili_jct);
 
-                                            fetch(proxy_domain + "/bilibili/api/x/member/web/face/update?csrf=" + bili_jct, requestOptions)
-                                                .then(response => response.json())
-                                                .then(result => {
-                                                    if (result.code === 0) {
-                                                        setAlertModalTitle("上传成功")
-                                                        setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("上传失败")
-                                                        setAlertModalInfo(result.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-                                                })
-                                        }}>上传图片
-                                        </button>
-                                    </div>
+                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
+                                            method: 'POST',
+                                            mode: 'cors',
+                                            body: formdata,
+                                            credentials: 'include',
+                                            redirect: 'follow'
+                                        })
+                                            .then((res) => res.json())
+                                            .then(data => {
+                                                if (data.code === 0 || data.code === 20414) {
+                                                    var Folder = BiliFolders[BiliSelectedFolder]
+                                                    var formdata = new FormData();
+                                                    formdata.append("media_id", Folder.id);
+                                                    formdata.append("title", Folder.title);
+                                                    formdata.append("intro", Folder.intro);
+                                                    formdata.append("cover", data.data.location);
+                                                    formdata.append("privacy", 0);
+                                                    formdata.append("csrf", bili_jct);
+                                                    var requestOptions = {
+                                                        method: 'POST',
+                                                        body: formdata,
+                                                        mode: 'cors',
+                                                        credentials: 'include',
+                                                        redirect: 'follow'
+                                                    };
+
+                                                    fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/edit", requestOptions)
+                                                        .then(response => response.json())
+                                                        .then(result => {
+                                                            if (result.code === 0) {
+                                                                setAlertModalTitle("上传成功")
+                                                                setAlertModalInfo("请到收藏夹页面查看上传结果。")
+                                                                setAlertModalShowed(true)
+                                                            } else {
+                                                                setAlertModalTitle("上传失败")
+                                                                setAlertModalInfo(result.message)
+                                                                setAlertModalShowed(true)
+                                                            }
+                                                        })
+
+                                                } else if (data.code === -101) {
+                                                    setAlertModalTitle("登录信息错误")
+                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
+                                                    setAlertModalShowed(true)
+
+                                                } else if (data.code === -111) {
+                                                    setAlertModalTitle("登录信息错误")
+                                                    setAlertModalInfo("bili_jct填写有误或已过期")
+                                                    setAlertModalShowed(true)
+                                                }
+
+                                            })
+                                    }} className="btn btn-secondary ">上传图片
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -881,7 +920,11 @@ export default function Page() {
                                     <div className="card relative  overflow-hidden w-64 h-40 ">
                                         <Image fill
                                                loader={ImageLoader}
-                                               src={BiliVideoSeasonsCover}/>
+                                               src={BiliVideoSeasonsCover}
+                                               alt=""
+                                               unoptimized
+                                               property="true"
+                                        />
                                     </div>
                                 </div>
 
@@ -1023,7 +1066,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-64 h-18-8 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliArticleCover}/>
+                                                   src={BiliArticleCover}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
 
@@ -1153,7 +1200,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-80 h-45 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliArticleHeader}/>
+                                                   src={BiliArticleHeader}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
 
@@ -1282,7 +1333,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-56 h-72 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliArticleListCover}/>
+                                                   src={BiliArticleListCover}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
 
@@ -1411,9 +1466,10 @@ export default function Page() {
                                     </div>
                                     <div className="grid flex-grow place-items-center">
                                         <div className="card relative  overflow-hidden w-80 h-45 ">
-                                            <img fill
-                                                 loader={ImageLoader}
-                                                 src={BiliLiveroomCover}/>
+                                            <img
+                                                 src={BiliLiveroomCover}
+                                                 alt=""
+                                            />
                                         </div>
                                     </div>
                                     <input hidden
@@ -1509,7 +1565,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-45 h-45 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliLiveroomShowCover}/>
+                                                   src={BiliLiveroomShowCover}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
                                     <input hidden
@@ -1603,7 +1663,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-45 h-80 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliLiveroomCoverVertical}/>
+                                                   src={BiliLiveroomCoverVertical}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
                                     <input hidden
@@ -1733,7 +1797,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-45 h-45 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliMusicCover}/>
+                                                   src={BiliMusicCover}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
 
@@ -1850,7 +1918,11 @@ export default function Page() {
                                         <div className="card relative  overflow-hidden w-45 h-45 ">
                                             <Image fill
                                                    loader={ImageLoader}
-                                                   src={BiliMusicCompilationsCover}/>
+                                                   src={BiliMusicCompilationsCover}
+                                                   alt=""
+                                                   unoptimized
+                                                   property="true"
+                                            />
                                         </div>
                                     </div>
 
@@ -1948,10 +2020,10 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
-                        {/*收藏夹动态封面上传*/}
+                        {/*自定义头像上传*/}
                         <div className="card flex  flex-col bg-base-100  p-4 ">
                             <div className="text-xl flex  relative font-bold  gap-4">
-                                <div>收藏夹动态封面上传</div>
+                                <div>自定义头像上传</div>
                                 <div
                                     className="dropdown absolute right-0 h-full dropdown-top sm:dropdown-bottom dropdown-end flex justify-self-end  dropdown-hover ">
                                     <div className="badge  h-full   badge-accent">
@@ -1961,129 +2033,78 @@ export default function Page() {
                                          className="dropdown-content card card-compact  w-72 sm:w-96 p-2  bg-neutral text-neutral-content">
                                         <div className="card-body ">
                                             <div className="text-left ">
-                                                1.动态封面只能上传Webp格式的图片，图片大小不能超过3MB。
+                                                1.本工具不能上传动态头像，但是可以上传透明的PNG格式的图片，绕过B站上传头像的裁剪。
                                             </div>
                                             <div className="text-left ">
-                                                2.上传成功后请到收藏夹查看是否通过审核。
-                                            </div>
-                                            <div className="text-left ">
-                                                3.封面推荐分辨率为960x600或480x300。
-
-                                            </div>
-                                            <div className="text-left ">
-                                                4.上传后请检查收藏夹信息有无丢失，因为很多参数在上传动态封面时没有和收藏夹同步
+                                                2.头像推荐分辨率为120x120;
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div
-                                className="flex  flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4">
-                                <div className="grid flex-grow place-items-center ">
-                                    <div className="card relative  overflow-hidden w-64 h-40 ">
-                                        <Image fill
-                                               loader={ImageLoader}
-                                               src={BiliFolderCover}/>
+                                className="flex flex-col w-full relative  flex-grow overflow-hidden justify-center gap-4 mt-4">
+                                <div className="avatar grid flex-grow place-items-center">
+                                    <div className="card  relative  overflow-hidden w-48 h-48 ">
+                                        <img
+                                             src={BiliUserFace}/>
                                     </div>
                                 </div>
-
-                                <div className="flex  justify-center">
-                                    <input hidden
-                                           type="file"
-                                           ref={NewBiliFolderCoverFileRef}
-                                           onChangeCapture={(e) => {
-                                               setBiliFolderCover(URL.createObjectURL(e.target.files[0]))
-                                           }}
-                                    />
-                                    <select value={BiliSelectedFolder}
-                                            onChange={(e) => {
-
-                                                setBiliFolderCover(BiliFolders[e.target.value].cover);
-                                                setBiliSelectedFolder(e.target.value)
-                                            }} className="select select-secondary w-full max-w-xs">
-                                        <option disabled>请选择一个合集</option>
-                                        {BiliFolders.map((item, index) => (<option value={index}
-                                                                                   key={index}>{item.title}</option>))}
-                                    </select>
-                                </div>
-                                <div className="flex  justify-center  gap-4">
-                                    <div className="flex  justify-center">
-                                        <button onClick={(e) => {
-                                            NewBiliFolderCoverFileRef.current.click();
-                                        }} className="btn btn-primary  ">选择图片
+                                <input hidden
+                                       type="file"
+                                       ref={NewBiliUserFaceFileRef}
+                                       onChangeCapture={(e) => {
+                                           setBiliUserFace(URL.createObjectURL(e.target.files[0]))
+                                       }}
+                                />
+                                <div className="flex  justify-center gap-4">
+                                    <div>
+                                        <button className="btn btn-primary" onClick={(e) => {
+                                            NewBiliUserFaceFileRef.current.click();
+                                        }}>选择图片
                                         </button>
                                     </div>
-                                    <button onClick={(e) => {
+                                    <div>
+                                        <button className="btn btn-secondary" onClick={(e) => {
+                                            var formdata = new FormData();
+                                            formdata.append("dopost", "save");
+                                            formdata.append("DisplayRank", "1000");
+                                            formdata.append("face", NewBiliUserFaceFileRef.current.files[0]);
+                                            var requestOptions = {
+                                                method: 'POST',
+                                                body: formdata,
+                                                credentials: 'include',
+                                                redirect: 'follow',
+                                                mode: 'cors'
 
-                                        var formdata = new FormData();
-                                        formdata.append("bucket", "material_up");
-                                        formdata.append("dir", "");
-                                        formdata.append("file", NewBiliFolderCoverFileRef.current.files[0]);
-                                        formdata.append("csrf", bili_jct);
+                                            };
 
-                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                            method: 'POST',
-                                            mode: 'cors',
-                                            body: formdata,
-                                            credentials: 'include',
-                                            redirect: 'follow'
-                                        })
-                                            .then((res) => res.json())
-                                            .then(data => {
-                                                if (data.code === 0 || data.code === 20414) {
-                                                    var Folder = BiliFolders[BiliSelectedFolder]
-                                                    var formdata = new FormData();
-                                                    formdata.append("media_id", Folder.id);
-                                                    formdata.append("title", Folder.title);
-                                                    formdata.append("intro", Folder.intro);
-                                                    formdata.append("cover", data.data.location);
-                                                    formdata.append("privacy", 0);
-                                                    formdata.append("csrf", bili_jct);
-                                                    var requestOptions = {
-                                                        method: 'POST',
-                                                        body: formdata,
-                                                        mode: 'cors',
-                                                        credentials: 'include',
-                                                        redirect: 'follow'
-                                                    };
-
-                                                    fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/edit", requestOptions)
-                                                        .then(response => response.json())
-                                                        .then(result => {
-                                                            if (result.code === 0) {
-                                                                setAlertModalTitle("上传成功")
-                                                                setAlertModalInfo("请到收藏夹页面查看上传结果。")
-                                                                setAlertModalShowed(true)
-                                                            } else {
-                                                                setAlertModalTitle("上传失败")
-                                                                setAlertModalInfo(result.message)
-                                                                setAlertModalShowed(true)
-                                                            }
-                                                        })
-
-                                                } else if (data.code === -101) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                    setAlertModalShowed(true)
-
-                                                } else if (data.code === -111) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("bili_jct填写有误或已过期")
-                                                    setAlertModalShowed(true)
-                                                }
-
-                                            })
-                                    }} className="btn btn-secondary ">上传图片
-                                    </button>
+                                            fetch(proxy_domain + "/bilibili/api/x/member/web/face/update?csrf=" + bili_jct, requestOptions)
+                                                .then(response => response.json())
+                                                .then(result => {
+                                                    if (result.code === 0) {
+                                                        setAlertModalTitle("上传成功")
+                                                        setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
+                                                        setAlertModalShowed(true)
+                                                    } else {
+                                                        setAlertModalTitle("上传失败")
+                                                        setAlertModalInfo(result.message)
+                                                        setAlertModalShowed(true)
+                                                    }
+                                                })
+                                        }}>上传图片
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                     <div ref={AlertRef} className="toast toast-end">
 
 
                     </div>
-                    <input onChangeCapture={(e) => {
+                    <input onChange={(e) => {
                         setAlertModalShowed(e.target.checked)
                     }} checked={isAlertModalShowed} type="checkbox" id="AlertModal" className="modal-toggle"/>
                     <label htmlFor="AlertModal" className="modal cursor-pointer">
