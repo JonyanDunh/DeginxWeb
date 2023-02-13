@@ -4,10 +4,11 @@ import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 import Head from 'next/head'
+import useSWR from 'swr'
+import useSWRImmutable from 'swr/immutable'
+import useSWRMutation from 'swr/mutation'
 
 var UrlDecode = require('url');
-import useSWR, {mutate} from 'swr'
-import useSWRImmutable from 'swr/immutable'
 
 function base64ToFile(base64, fileName) {
     let arr = base64.split(",");
@@ -116,13 +117,83 @@ export default function Page() {
     const {data: BiliArticleDraftsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x/web/draft/list" : null, fetcher)
     const {data: BiliJonyanDunhData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893" : null, fetcher)
     const {data: BiliToolsUserCountsData} = useSWR(isBiliLogin ? "https://proxy.deginx.com/bilibili/tools/UserCounts/" : null, fetcher)
-
+    const {trigger: BiliUploadImage} = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
+        var formdata = new FormData();
+        formdata.append("bucket", "material_up");
+        formdata.append("dir", "");
+        formdata.append("file", arg);
+        formdata.append("csrf", Cookies.get("bili_jct"));
+        const res = await fetch(url, {
+            method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
+        })
+        var data = res.json()
+        data.then(result => {
+            if (result.code === -101) {
+                setAlertModalTitle("登录信息错误")
+                setAlertModalInfo("SESSDATA填写有误或已过期")
+                setAlertModalShowed(true)
+            } else if (result.code === -111) {
+                setAlertModalTitle("登录信息错误")
+                setAlertModalInfo("bili_jct填写有误或已过期")
+                setAlertModalShowed(true)
+            } else if (result.code !== 0) {
+                setAlertModalTitle("上传图片错误")
+                setAlertModalInfo(result.message)
+                setAlertModalShowed(true)
+            }
+        })
+        return data
+    })
+    const {trigger: PostRequest} = useSWRMutation("PostRequest", async (url, {arg}) => {
+        const res = await fetch(arg.url, {
+            method: 'POST',
+            mode: 'cors',
+            body: arg?.formdata,
+            headers: arg?.headers,
+            credentials: 'include',
+            redirect: 'follow'
+        })
+        var data = res.json()
+        data.then(result => {
+            if (result.code !== 0) {
+                setAlertModalTitle("上传失败")
+                setAlertModalInfo(result.message)
+                setAlertModalShowed(true)
+            }
+        })
+        return data
+    })
+    const {trigger: PutRequest} = useSWRMutation("PostRequest", async (url, {arg}) => {
+        const res = await fetch(arg.url, {
+            method: 'PUT',
+            mode: 'cors',
+            body: arg?.formdata,
+            headers: arg?.headers,
+            credentials: 'include',
+            redirect: 'follow'
+        })
+        var data = res.json()
+        data.then(result => {
+            if (result.code !== 0) {
+                setAlertModalTitle("上传失败")
+                setAlertModalInfo(result.message)
+                setAlertModalShowed(true)
+            }
+        })
+        return data
+    })
+    const {trigger: GetRequest} = useSWRMutation("PostRequest", async (url, {arg}) => {
+        const res = await fetch(arg.url, {
+            method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
+        })
+        return res.json()
+    })
     useEffect(() => {
         if (BiliUserInfoData?.data?.mid) setBiliUid(BiliUserInfoData.data.mid)
         if (BiliUserInfoData?.data?.face) setBiliUserFace(BiliUserInfoData.data.face)
     }, [BiliUserInfoData])
     useEffect(() => {
-        if (BiliLiveRoomShowCoverData?.data[0]?.url&&BiliLiveRoomShowCoverData?.data[0]?.url!== "") setBiliLiveroomShowCover(BiliLiveRoomShowCoverData?.data[0]?.url)
+        if (BiliLiveRoomShowCoverData?.data[0]?.url && BiliLiveRoomShowCoverData?.data[0]?.url !== "") setBiliLiveroomShowCover(BiliLiveRoomShowCoverData?.data[0]?.url)
     }, [BiliLiveRoomShowCoverData])
     useEffect(() => {
         if (BiliLiveRoomCoverData?.data?.cover?.url && BiliLiveRoomCoverData?.data?.cover?.url !== "") setBiliLiveroomCover(BiliLiveRoomCoverData.data.cover.url)
@@ -130,36 +201,40 @@ export default function Page() {
     }, [BiliLiveRoomCoverData])
     useEffect(() => {
         if (BiliArticlesListData?.data?.lists) setBiliArticlesList(BiliArticlesListData.data.lists)
-        if (BiliArticlesListData?.data?.lists[0]?.image_url&&BiliArticlesListData?.data?.lists[0]?.image_url!== "") setBiliArticleListCover(BiliArticlesListData.data.lists[0].image_url)
+        if (BiliArticlesListData?.data?.lists[0]?.image_url && BiliArticlesListData?.data?.lists[0]?.image_url !== "") setBiliArticleListCover(BiliArticlesListData.data.lists[0].image_url)
     }, [BiliArticlesListData])
 
     useEffect(() => {
         if (BiliVideoSeasonsData?.data?.seasons) setBiliVideoSeasons(BiliVideoSeasonsData.data.seasons)
-        if (BiliVideoSeasonsData?.data?.seasons[0]?.season.cover&&BiliVideoSeasonsData?.data?.seasons[0]?.season.cover!== "") setBiliVideoSeasonsCover(BiliVideoSeasonsData.data.seasons[0].season.cover)
+        if (BiliVideoSeasonsData?.data?.seasons[0]?.season.cover && BiliVideoSeasonsData?.data?.seasons[0]?.season.cover !== "") setBiliVideoSeasonsCover(BiliVideoSeasonsData.data.seasons[0].season.cover)
     }, [BiliVideoSeasonsData])
     useEffect(() => {
-        if(BiliMusicCompilationsData?.data?.list)setBiliMusicCompilations(BiliMusicCompilationsData.data.list)
-        if(BiliMusicCompilationsData?.data?.list[0]?.cover_url&&BiliMusicCompilationsData?.data?.list[0]?.cover_url!== "")setBiliMusicCompilationsCover(BiliMusicCompilationsData.data.list[0].cover_url)
+        if (BiliMusicCompilationsData?.data?.list) setBiliMusicCompilations(BiliMusicCompilationsData.data.list)
+        if (BiliMusicCompilationsData?.data?.list[0]?.cover_url && BiliMusicCompilationsData?.data?.list[0]?.cover_url !== "") setBiliMusicCompilationsCover(BiliMusicCompilationsData.data.list[0].cover_url)
     }, [BiliMusicCompilationsData])
     useEffect(() => {
-        if(BiliFoldersData?.data?.list)setBiliFolders(BiliFoldersData.data.list)
-        if(BiliFoldersData?.data?.list[0]?.cover&&BiliFoldersData?.data?.list[0]?.cover!== "")setBiliFolderCover(BiliFoldersData.data.list[0].cover)
+        if (BiliFoldersData?.data?.list) setBiliFolders(BiliFoldersData.data.list)
+        if (BiliFoldersData?.data?.list[0]?.cover && BiliFoldersData?.data?.list[0]?.cover !== "") setBiliFolderCover(BiliFoldersData.data.list[0].cover)
     }, [BiliFoldersData])
     useEffect(() => {
-        if(BiliMusicsData?.data?.list)setBiliMusics(BiliMusicsData.data.list)
-        if(BiliMusicsData?.data?.list[0]?.cover_url&&BiliMusicsData?.data?.list[0]?.cover_url!== "")setBiliMusicCover(BiliMusicsData.data.list[0].cover_url)
+        if (BiliMusicsData?.data?.list) setBiliMusics(BiliMusicsData.data.list)
+        if (BiliMusicsData?.data?.list[0]?.cover_url && BiliMusicsData?.data?.list[0]?.cover_url !== "") setBiliMusicCover(BiliMusicsData.data.list[0].cover_url)
     }, [BiliMusicsData])
     useEffect(() => {
-        if(BiliArticlesData&&BiliArticleDraftsData)
-        {
-            var Articles =[]
-            if(BiliArticlesData?.artlist?.articles)Articles =Articles.concat(BiliArticlesData.artlist.articles)
-            if(BiliArticleDraftsData?.artlist?.drafts)Articles =Articles.concat(BiliArticleDraftsData.artlist.drafts)
+        if (BiliArticlesData && BiliArticleDraftsData) {
+            var Articles = []
+            if (BiliArticlesData?.artlist?.articles) Articles = Articles.concat(BiliArticlesData.artlist.articles)
+            if (BiliArticleDraftsData?.artlist?.drafts) Articles = Articles.concat(BiliArticleDraftsData.artlist.drafts)
             setBiliArticles(Articles)
-            if(Articles[0]?.banner_url)setBiliArticleHeader(Articles[0].banner_url)
-            if(Articles[0]?.image_urls[0])setBiliArticleCover(Articles[0].image_urls[0]);
+            if (Articles[0]?.banner_url) setBiliArticleHeader(Articles[0].banner_url)
+            if (Articles[0]?.image_urls[0]) setBiliArticleCover(Articles[0].image_urls[0]);
         }
-    }, [BiliArticlesData,BiliArticleDraftsData])
+    }, [BiliArticlesData, BiliArticleDraftsData])
+
+    // useEffect(() => {
+    //     console.log(BiliUploadedImageData)
+    // }, [BiliUploadedImageData])
+
 
     function clearCookie() {
         Cookies.remove("SESSDATA", {"path": "/", domain: domain})
@@ -168,42 +243,33 @@ export default function Page() {
         Cookies.remove("DedeUserID__ckMd5", {"path": "/", domain: domain})
         window.location.reload()
     }
+
     function donateUP() {
         let formdata = new FormData();
         formdata.append("fid", "96876893");
         formdata.append("csrf", Cookies.get("bili_jct"));
         formdata.append("act", "1");
-        fetch(proxy_domain + "/bilibili/api/x/relation/modify", {
-            method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
-        })
+        PostRequest({url: proxy_domain + "/bilibili/api/x/relation/modify", formdata: formdata})
         let aids = ["949195634", "524192527", "394193741", "971878849", "667881688"]
         aids.map((aid, index) => {
             formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("like", 1);
             formdata.append("csrf", Cookies.get("bili_jct"));
-            fetch(proxy_domain + "/bilibili/api/x/web-interface/archive/like/triple", {
-                method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
-            })
+            PostRequest({url: proxy_domain + "/bilibili/api/x/web-interface/archive/like/triple", formdata: formdata})
             formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("csrf", Cookies.get("bili_jct"));
-            fetch(proxy_domain + "/bilibili/api/x/web-interface/archive/like", {
-                method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
-            })
+            PostRequest({url: proxy_domain + "/bilibili/api/x/web-interface/archive/like", formdata: formdata})
             formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("multiply", "2");
             formdata.append("csrf", Cookies.get("bili_jct"));
-            fetch(proxy_domain + "/bilibili/api/x/web-interface/coin/add", {
-                method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
-            })
+            PostRequest({url: proxy_domain + "/bilibili/api/x/web-interface/coin/add", formdata: formdata})
             formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("played_time", Math.round(Math.random() * (250 - 100)) + 100);
-            fetch(proxy_domain + "/bilibili/api/x/click-interface/web/heartbeat", {
-                method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
-            })
+            PostRequest({url: proxy_domain + "/bilibili/api/x/click-interface/web/heartbeat", formdata: formdata})
         })
     }
 
@@ -211,58 +277,366 @@ export default function Page() {
         return src
     }
     useEffect(() => {
-        if (Cookies.get("isBiliLogin") === "true") {
-            var formdata = new FormData();
-            formdata.append("bucket", "material_up");
-            formdata.append("dir", "");
-            formdata.append("file", base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"));
-            formdata.append("csrf", Cookies.get("bili_jct"));
-
-            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
-            })
-                .then((res) => res.json())
-                .then(data => {
-                    if (data.code != 0 && data.code != 20414)
-                        clearCookie()
-                })
-
+        async function validateLogin() {
+            const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
+            if (data.code !== 0 && data.code !== 20414) clearCookie();
         }
+
+        if (Cookies.get("isBiliLogin") === "true") validateLogin()
     }, [])
 
-    function BiliLoginClickHandler() {
-        //setBiliLogin(true)
+    async function BiliLoginClickHandler() {
         Cookies.set('SESSDATA', SESSDATA, {"path": "/", expires: 365, domain: domain})
         Cookies.set('bili_jct', bili_jct, {"path": "/", expires: 365, domain: domain})
         Cookies.set('DedeUserID', DedeUserID, {"path": "/", expires: 365, domain: domain})
         Cookies.set('DedeUserID__ckMd5', DedeUserID__ckMd5, {"path": "/", expires: 365, domain: domain})
+        const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
+        if (data.code === 0 || data.code === 20414) {
+            setBiliLogin(true)
+            setBiliLoginFail(false)
+            Cookies.set('isBiliLogin', true, {"path": "/", expires: 365, domain: domain})
+            donateUP()
+        } else if (data.code === -101) {
+            setBiliLoginFail(true)
+            setBiliLoginFailInfo("SESSDATA填写有误或已过期")
+        } else if (data.code === -111) {
+            setBiliLoginFail(true)
+            setBiliLoginFailInfo("bili_jct填写有误或已过期")
+        }
+    }
 
-        var formdata = new FormData();
-        formdata.append("bucket", "material_up");
-        formdata.append("dir", "");
-        formdata.append("file", base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"));
-        formdata.append("csrf", bili_jct);
-
-        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-            method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
-        })
-            .then((res) => res.json())
-            .then(data => {
-                if (data.code === 0 || data.code === 20414) {
-                    setBiliLogin(true)
-                    setBiliLoginFail(false)
-                    Cookies.set('isBiliLogin', true, {"path": "/", expires: 365, domain: domain})
-                    donateUP()
-                } else if (data.code === -101) {
-                    setBiliLoginFail(true)
-                    setBiliLoginFailInfo("SESSDATA填写有误或已过期")
-
-                } else if (data.code === -111) {
-                    setBiliLoginFail(true)
-                    setBiliLoginFailInfo("bili_jct填写有误或已过期")
-
-                }
+    async function BiliUploadFolderCover() {
+        const data = await BiliUploadImage(NewBiliFolderCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            const Folder = BiliFolders[BiliSelectedFolder];
+            const formdata = new FormData();
+            formdata.append("media_id", Folder.id);
+            formdata.append("title", Folder.title);
+            formdata.append("intro", Folder.intro);
+            formdata.append("cover", data.data.location);
+            formdata.append("privacy", 0);
+            formdata.append("csrf", bili_jct);
+            const result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/x/v3/fav/folder/edit",
+                formdata: formdata
             })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到收藏夹页面查看上传结果。")
+                setAlertModalShowed(true)
+            }
+        }
+    }
+
+    async function BiliUploadVideoSeasonsCover() {
+        const data = await BiliUploadImage(NewBiliVideoSeasonsCoverFileRef.current.files[0])
+        if (data.code === 0 || data.code === 20414) {
+            var VideoSeason = BiliVideoSeasons[BiliSelectedVideoSeasons]
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            var raw = JSON.stringify({
+                "season": {
+                    "id": VideoSeason.season.id,
+                    "title": VideoSeason.season.title,
+                    "desc": VideoSeason.season.desc,
+                    "cover": data.data.location,
+                    "isEnd": VideoSeason.season.isEnd,
+                    "season_price": VideoSeason.season.season_price
+                }
+            });
+            const result = await PostRequest({
+                url: proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf=" + bili_jct,
+                formdata: raw,
+                headers: myHeaders
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到投稿页面查看上传结果。")
+                setAlertModalShowed(true)
+            }
+
+        }
+    }
+
+    async function updateArticle(Article, ImageUrl, type) {
+        const UpdateArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/update" : proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate";
+        const GetArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/view?aid=" + Article.id : proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + Article.id;
+        const data = await GetRequest({url: GetArticleUrl})
+        if (data.code === 0) {
+            Article = data.data
+            var formdata = new FormData();
+            formdata.append("title", checkDataNull(Article.title));
+            formdata.append("banner_url", type === 0 ? Article.banner_url : ImageUrl);
+            formdata.append("content", checkDataNull(Article.content));
+            formdata.append("summary", checkDataNull(Article.summary));
+            formdata.append("category", checkDataNull(Article.category.id));
+            formdata.append("list_id", checkDataNull(checkDataNull(Article.list).id));
+            formdata.append("tid", checkDataNull(Article.template_id));
+            formdata.append("reprint", checkDataNull(Article.reprint));
+            formdata.append("tags", checkDataNull(Article.tags));
+            formdata.append("image_urls", type === 1 ? Article.image_urls : ImageUrl);
+            formdata.append("origin_image_urls", type === 1 ? Article.origin_image_urls : ImageUrl);
+            formdata.append("dynamic_intro", checkDataNull(Article.dynamic_intro));
+            formdata.append("media_id", checkDataNull(Article.media_id));
+            formdata.append("spoiler", checkDataNull(Article.spoiler));
+            formdata.append("original", checkDataNull(Article.original));
+            formdata.append("top_video_bvid", checkDataNull(checkDataNull(Article.top_video_info).bvid));
+            formdata.append("aid", Article.id);
+            formdata.append("items", checkDataNull(Article.items));
+            formdata.append("csrf", bili_jct);
+            const result = await PostRequest({url: UpdateArticleUrl, formdata: formdata})
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到投稿页面查看上传结果。")
+                setAlertModalShowed(true)
+            }
+        } else {
+            setAlertModalTitle("获取专栏数据失败")
+            setAlertModalInfo(result.message)
+            setAlertModalShowed(true)
+        }
+
+
+    }
+
+    async function BiliUploadArticleHeader() {
+        const data = await BiliUploadImage(NewBiliArticleHeaderFileRef.current.files[0])
+        if (data.code === 0) {
+            var Article = BiliArticles[BiliSelectedArticleHeader]
+            var formdata = new FormData();
+            formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
+            formdata.append("banner_url", data.data.location);
+            formdata.append("csrf", bili_jct);
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate",
+                formdata: formdata
+            })
+            if (result.code === 0) {
+                var TransferAID = result.data.aid
+                result = await GetRequest({url: proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID})
+                if (result.code === 0) {
+                    updateArticle(Article, result.data.banner_url, 1)
+                    formdata = new FormData();
+                    formdata.append("aid", TransferAID);
+                    formdata.append("csrf", bili_jct);
+                    await PostRequest({
+                        url: proxy_domain + "/bilibili/member/x/web/draft/delete",
+                        formdata: formdata
+                    })
+
+                } else {
+                    setAlertModalTitle("读取中转站信息失败")
+                    setAlertModalInfo(result.message)
+                    setAlertModalShowed(true)
+                }
+
+            }
+
+        }
+    }
+
+    async function BiliUploadArticleCover() {
+        const data = await BiliUploadImage(NewBiliArticleCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            var Article = BiliArticles[BiliSelectedArticleCover]
+            var formdata = new FormData();
+            formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
+            formdata.append("banner_url", data.data.location);
+            formdata.append("csrf", bili_jct);
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate",
+                formdata: formdata
+            })
+            if (result.code === 0) {
+                var TransferAID = result.data.aid
+                result = await GetRequest({url: proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID})
+                if (result.code === 0) {
+                    updateArticle(Article, result.data.banner_url, 0)
+                    formdata = new FormData();
+                    formdata.append("aid", TransferAID);
+                    formdata.append("csrf", bili_jct);
+                    await PostRequest({
+                        url: proxy_domain + "/bilibili/member/x/web/draft/delete",
+                        formdata: formdata
+                    })
+                } else {
+                    setAlertModalTitle("读取中转站信息失败")
+                    setAlertModalInfo(result.message)
+                    setAlertModalShowed(true)
+                }
+            }
+
+        }
+    }
+
+    async function BiliUploadArticleListCover() {
+        const data = await BiliUploadImage(NewBiliArticleListCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            var ArticleList = BiliArticlesList[BiliSelectedArticleList]
+            var formdata = new FormData();
+            formdata.append("list_id", ArticleList.id);
+            formdata.append("name", ArticleList.name);
+            formdata.append("summary", ArticleList.summary);
+            formdata.append("image_url", data.data.location);
+            formdata.append("only_list", "true");
+            formdata.append("csrf", bili_jct);
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/x/article/creative/list/update",
+                formdata: formdata
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到投稿页面查看上传结果。")
+                setAlertModalShowed(true)
+            }
+
+        }
+    }
+
+    async function BiliUploadLiveroomCover() {
+        const data = await BiliUploadImage(NewBiliLiveroomCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            var urlencoded = new URLSearchParams();
+            urlencoded.append("platform", " web");
+            urlencoded.append("mobi_app", " web");
+            urlencoded.append("build", " 1");
+            urlencoded.append("cover", data.data.location);
+            urlencoded.append("liveDirectionType", " 2");
+            urlencoded.append("csrf_token", bili_jct);
+            urlencoded.append("csrf", bili_jct);
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo",
+                formdata: urlencoded
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                setAlertModalShowed(true)
+            }
+        }
+    }
+
+    async function BiliUploadLiveroomCoverVertical() {
+        const data = await BiliUploadImage(NewBiliLiveroomCoverVerticalFileRef.current.files[0])
+        if (data.code === 0) {
+            var urlencoded = new URLSearchParams();
+            urlencoded.append("platform", " web");
+            urlencoded.append("mobi_app", " web");
+            urlencoded.append("build", " 1");
+            urlencoded.append("coverVertical", data.data.location);
+            urlencoded.append("liveDirectionType", " 2");
+            urlencoded.append("csrf_token", bili_jct);
+            urlencoded.append("csrf", bili_jct);
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo",
+                formdata: urlencoded
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                setAlertModalShowed(true)
+            }
+        }
+    }
+
+    async function BiliUploadLiveroomShowCover() {
+        const data = await BiliUploadImage(NewBiliLiveroomShowCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            var urlencoded = new URLSearchParams();
+            urlencoded.append("room_id", BiliLiveroom);
+            urlencoded.append("type", "show");
+            urlencoded.append("url", data.data.location);
+            urlencoded.append("pic_id", 5430701);
+            urlencoded.append("csrf_token", bili_jct);
+            urlencoded.append("csrf", bili_jct);
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/api/live/room/v1/Cover/replace",
+                formdata: urlencoded,
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+                setAlertModalShowed(true)
+            }
+        }
+    }
+
+    async function BiliUploadUserFace() {
+        var formdata = new FormData();
+        formdata.append("dopost", "save");
+        formdata.append("DisplayRank", "1000");
+        formdata.append("face", NewBiliUserFaceFileRef.current.files[0]);
+        var result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/x/member/web/face/update?csrf=" + bili_jct,
+            formdata: formdata,
+        })
+        if (result.code === 0) {
+            setAlertModalTitle("上传成功")
+            setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
+            setAlertModalShowed(true)
+        }
+    }
+
+    async function BiliUploadMusicCover() {
+        const data = await BiliUploadImage(NewBiliMusicCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            var Article = BiliMusics[BiliSelectedMusic]
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            var raw = JSON.stringify({
+                "lyric_url": checkDataNull(Article.lyric_url),
+                "cover_url": data.data.location,
+                "song_id": Article.song_id,
+                "album_id": checkDataNull(Article.album_id),
+                "mid": Article.mid,
+                "origin_title": checkDataNull(Article.origin_title),
+                "origin_url": checkDataNull(Article.origin_url),
+                "avid": checkDataNull(Article.avid),
+                "tid": checkDataNull(Article.tid),
+                "cid": checkDataNull(Article.cid),
+                "intro": checkDataNull(Article.intro),
+                "activity_id": checkDataNull(Article.activity_id),
+                "is_bgm": 1,
+                "title": checkDataNull(Article.title)
+            });
+            var result = await PutRequest({
+                url: proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/" + Article.song_id,
+                formdata: raw,
+                headers: myHeaders
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到投稿页面查看上传结果。")
+                setAlertModalShowed(true)
+            }
+        }
+    }
+
+    async function BiliUploadMusicCompilationsCover() {
+        const data = await BiliUploadImage(NewBiliMusicCompilationsCoverFileRef.current.files[0])
+        if (data.code === 0) {
+            var MusicCompilation = BiliMusicCompilations[BiliSelectedMusicCompilations]
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            var raw = JSON.stringify({
+                "compilation_id": MusicCompilation.compilation_id,
+                "cover_url": data.data.location,
+                "is_synch": 0,
+                "intro": data.data.intro,
+                "title": data.data.title
+            });
+            var result = await PostRequest({
+                url: proxy_domain + "/bilibili/index/audio/music-service/compilation/update_compilation",
+                formdata: raw,
+                headers: myHeaders
+            })
+            if (result.code === 0) {
+                setAlertModalTitle("上传成功")
+                setAlertModalInfo("请到投稿页面查看上传结果。")
+                setAlertModalShowed(true)
+            }
+
+        }
     }
 
     function checkDataNull(data) {
@@ -278,66 +652,6 @@ export default function Page() {
         setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
     }
 
-    function updateArticle(Article, ImageUrl, type) {
-        var UpdateArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/update" : proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate"
-
-        var GetArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/view?aid=" + Article.id : proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + Article.id
-
-
-        fetch(GetArticleUrl, {
-            method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0) {
-                    Article = result.data
-
-                    var formdata = new FormData();
-                    formdata.append("title", checkDataNull(Article.title));
-                    formdata.append("banner_url", type === 0 ? Article.banner_url : ImageUrl);
-                    formdata.append("content", checkDataNull(Article.content));
-                    formdata.append("summary", checkDataNull(Article.summary));
-                    formdata.append("category", checkDataNull(Article.category.id));
-                    formdata.append("list_id", checkDataNull(checkDataNull(Article.list).id));
-                    formdata.append("tid", checkDataNull(Article.template_id));
-                    formdata.append("reprint", checkDataNull(Article.reprint));
-                    formdata.append("tags", checkDataNull(Article.tags));
-                    formdata.append("image_urls", type === 1 ? Article.image_urls : ImageUrl);
-                    formdata.append("origin_image_urls", type === 1 ? Article.origin_image_urls : ImageUrl);
-                    formdata.append("dynamic_intro", checkDataNull(Article.dynamic_intro));
-                    formdata.append("media_id", checkDataNull(Article.media_id));
-                    formdata.append("spoiler", checkDataNull(Article.spoiler));
-                    formdata.append("original", checkDataNull(Article.original));
-                    formdata.append("top_video_bvid", checkDataNull(checkDataNull(Article.top_video_info).bvid));
-                    formdata.append("aid", Article.id);
-                    formdata.append("items", checkDataNull(Article.items));
-                    formdata.append("csrf", bili_jct);
-
-
-                    fetch(UpdateArticleUrl, {
-                        method: 'POST', body: formdata, mode: 'cors', credentials: 'include', redirect: 'follow'
-                    })
-                        .then(response => response.json())
-                        .then(result => {
-                            if (result.code === 0) {
-                                setAlertModalTitle("上传成功")
-                                setAlertModalInfo("请到投稿页面查看上传结果。")
-                                setAlertModalShowed(true)
-                            } else {
-                                setAlertModalTitle("上传失败")
-                                setAlertModalInfo(result.message)
-                                setAlertModalShowed(true)
-                            }
-                        })
-                } else {
-                    setAlertModalTitle("获取专栏数据失败")
-                    setAlertModalInfo(result.message)
-                    setAlertModalShowed(true)
-                }
-
-            })
-
-    }
 
     const bilibili_profile = <div className="card bilibili_profile   w-full sm:w-72 ">
         <div className="tabs ">
@@ -725,7 +1039,7 @@ export default function Page() {
                                                 setBiliFolderCover(BiliFolders[e.target.value].cover);
                                                 setBiliSelectedFolder(e.target.value)
                                             }} className="select select-secondary w-full max-w-xs">
-                                        <option disabled>请选择一个合集</option>
+                                        <option disabled>请选择一个收藏夹</option>
                                         {BiliFolders.map((item, index) => (<option value={index}
                                                                                    key={index}>{item.title}</option>))}
                                     </select>
@@ -737,71 +1051,7 @@ export default function Page() {
                                         }} className="btn btn-primary  ">选择图片
                                         </button>
                                     </div>
-                                    <button onClick={(e) => {
-
-                                        var formdata = new FormData();
-                                        formdata.append("bucket", "material_up");
-                                        formdata.append("dir", "");
-                                        formdata.append("file", NewBiliFolderCoverFileRef.current.files[0]);
-                                        formdata.append("csrf", bili_jct);
-
-                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                            method: 'POST',
-                                            mode: 'cors',
-                                            body: formdata,
-                                            credentials: 'include',
-                                            redirect: 'follow'
-                                        })
-                                            .then((res) => res.json())
-                                            .then(data => {
-                                                if (data.code === 0 || data.code === 20414) {
-                                                    var Folder = BiliFolders[BiliSelectedFolder]
-                                                    var formdata = new FormData();
-                                                    formdata.append("media_id", Folder.id);
-                                                    formdata.append("title", Folder.title);
-                                                    formdata.append("intro", Folder.intro);
-                                                    formdata.append("cover", data.data.location);
-                                                    formdata.append("privacy", 0);
-                                                    formdata.append("csrf", bili_jct);
-                                                    var requestOptions = {
-                                                        method: 'POST',
-                                                        body: formdata,
-                                                        mode: 'cors',
-                                                        credentials: 'include',
-                                                        redirect: 'follow'
-                                                    };
-
-                                                    fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/edit", requestOptions)
-                                                        .then(response => response.json())
-                                                        .then(result => {
-                                                            if (result.code === 0) {
-                                                                setAlertModalTitle("上传成功")
-                                                                setAlertModalInfo("请到收藏夹页面查看上传结果。")
-                                                                setAlertModalShowed(true)
-                                                            } else {
-                                                                setAlertModalTitle("上传失败")
-                                                                setAlertModalInfo(result.message)
-                                                                setAlertModalShowed(true)
-                                                            }
-                                                        })
-
-                                                } else if (data.code === -101) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                    setAlertModalShowed(true)
-
-                                                } else if (data.code === -111) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("bili_jct填写有误或已过期")
-                                                    setAlertModalShowed(true)
-                                                } else {
-                                                    setAlertModalTitle("错误")
-                                                    setAlertModalInfo(data.message)
-                                                    setAlertModalShowed(true)
-                                                }
-
-                                            })
-                                    }} className="btn btn-secondary ">上传图片
+                                    <button onClick={BiliUploadFolderCover} className="btn btn-secondary ">上传图片
                                     </button>
                                 </div>
                             </div>
@@ -875,77 +1125,7 @@ export default function Page() {
                                         }} className="btn btn-primary  ">选择图片
                                         </button>
                                     </div>
-                                    <button onClick={(e) => {
-
-                                        var formdata = new FormData();
-                                        formdata.append("bucket", "material_up");
-                                        formdata.append("dir", "");
-                                        formdata.append("file", NewBiliVideoSeasonsCoverFileRef.current.files[0]);
-                                        formdata.append("csrf", bili_jct);
-
-                                        fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                            method: 'POST',
-                                            mode: 'cors',
-                                            body: formdata,
-                                            credentials: 'include',
-                                            redirect: 'follow'
-                                        })
-                                            .then((res) => res.json())
-                                            .then(data => {
-                                                if (data.code === 0 || data.code === 20414) {
-                                                    var VideoSeason = BiliVideoSeasons[BiliSelectedVideoSeasons]
-                                                    var myHeaders = new Headers();
-                                                    myHeaders.append("Content-Type", "application/json");
-                                                    var raw = JSON.stringify({
-                                                        "season": {
-                                                            "id": VideoSeason.season.id,
-                                                            "title": VideoSeason.season.title,
-                                                            "desc": VideoSeason.season.desc,
-                                                            "cover": data.data.location,
-                                                            "isEnd": VideoSeason.season.isEnd,
-                                                            "season_price": VideoSeason.season.season_price
-                                                        }
-                                                    });
-                                                    var requestOptions = {
-                                                        method: 'POST',
-                                                        body: raw,
-                                                        mode: 'cors',
-                                                        headers: myHeaders,
-                                                        credentials: 'include',
-                                                        redirect: 'follow'
-                                                    };
-
-                                                    fetch(proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf=" + bili_jct, requestOptions)
-                                                        .then(response => response.json())
-                                                        .then(result => {
-                                                            if (result.code === 0) {
-                                                                setAlertModalTitle("上传成功")
-                                                                setAlertModalInfo("请到投稿页面查看上传结果。")
-                                                                setAlertModalShowed(true)
-                                                            } else {
-                                                                setAlertModalTitle("上传失败")
-                                                                setAlertModalInfo(result.message)
-                                                                setAlertModalShowed(true)
-                                                            }
-                                                        })
-
-                                                } else if (data.code === -101) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                    setAlertModalShowed(true)
-
-                                                } else if (data.code === -111) {
-                                                    setAlertModalTitle("登录信息错误")
-                                                    setAlertModalInfo("bili_jct填写有误或已过期")
-                                                    setAlertModalShowed(true)
-                                                } else {
-                                                    setAlertModalTitle("错误")
-                                                    setAlertModalInfo(data.message)
-                                                    setAlertModalShowed(true)
-                                                }
-
-                                            })
-                                    }} className="btn btn-secondary ">上传图片
+                                    <button onClick={BiliUploadVideoSeasonsCover} className="btn btn-secondary ">上传图片
                                     </button>
                                 </div>
                             </div>
@@ -1025,96 +1205,7 @@ export default function Page() {
                                             }} className="btn btn-primary  ">选择图片
                                             </button>
                                         </div>
-                                        <button onClick={(e) => {
-
-                                            var formdata = new FormData();
-                                            formdata.append("bucket", "material_up");
-                                            formdata.append("dir", "");
-                                            formdata.append("file", NewBiliArticleCoverFileRef.current.files[0]);
-                                            formdata.append("csrf", bili_jct);
-
-                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                method: 'POST',
-                                                mode: 'cors',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow'
-                                            })
-                                                .then((res) => res.json())
-                                                .then(data => {
-                                                    if (data.code === 0 || data.code === 20414) {
-                                                        var Article = BiliArticles[BiliSelectedArticleCover]
-
-                                                        var formdata = new FormData();
-                                                        formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
-                                                        formdata.append("banner_url", data.data.location);
-                                                        formdata.append("csrf", bili_jct);
-                                                        var requestOptions = {
-                                                            method: 'POST',
-                                                            body: formdata,
-                                                            mode: 'cors',
-                                                            credentials: 'include',
-                                                            redirect: 'follow'
-                                                        };
-
-                                                        fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate", requestOptions)
-                                                            .then(response => response.json())
-                                                            .then(result => {
-                                                                if (result.code === 0) {
-                                                                    var requestOptions = {
-                                                                        method: 'GET',
-                                                                        redirect: 'follow',
-                                                                        mode: 'cors',
-                                                                        credentials: 'include'
-                                                                    };
-                                                                    var TransferAID = result.data.aid
-                                                                    fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID, requestOptions)
-                                                                        .then(response => response.json())
-                                                                        .then(result => {
-                                                                            if (result.code === 0) {
-                                                                                updateArticle(Article, result.data.banner_url, 0)
-                                                                                var formdata = new FormData();
-                                                                                formdata.append("aid", TransferAID);
-                                                                                formdata.append("csrf", bili_jct);
-                                                                                fetch(proxy_domain + "/bilibili/member/x/web/draft/delete", {
-                                                                                    method: 'POST',
-                                                                                    body: formdata,
-                                                                                    mode: 'cors',
-                                                                                    credentials: 'include',
-                                                                                    redirect: 'follow'
-                                                                                })
-
-                                                                            } else {
-                                                                                setAlertModalTitle("读取中转站信息失败")
-                                                                                setAlertModalInfo(result.message)
-                                                                                setAlertModalShowed(true)
-                                                                            }
-                                                                        })
-
-                                                                } else {
-                                                                    setAlertModalTitle("上传图片到中转站失败")
-                                                                    setAlertModalInfo(result.message)
-                                                                    setAlertModalShowed(true)
-                                                                }
-                                                            })
-
-                                                    } else if (data.code === -101) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                        setAlertModalShowed(true)
-
-                                                    } else if (data.code === -111) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("bili_jct填写有误或已过期")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("错误")
-                                                        setAlertModalInfo(data.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-
-                                                })
-                                        }} className="btn btn-secondary ">上传图片
+                                        <button onClick={BiliUploadArticleCover} className="btn btn-secondary ">上传图片
                                         </button>
                                     </div>
                                 </div>
@@ -1162,96 +1253,8 @@ export default function Page() {
                                             }} className="btn btn-primary  ">选择图片
                                             </button>
                                         </div>
-                                        <button onClick={(e) => {
 
-                                            var formdata = new FormData();
-                                            formdata.append("bucket", "material_up");
-                                            formdata.append("dir", "");
-                                            formdata.append("file", NewBiliArticleHeaderFileRef.current.files[0]);
-                                            formdata.append("csrf", bili_jct);
-
-                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                method: 'POST',
-                                                mode: 'cors',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow'
-                                            })
-                                                .then((res) => res.json())
-                                                .then(data => {
-                                                    if (data.code === 0 || data.code === 20414) {
-                                                        var Article = BiliArticles[BiliSelectedArticleHeader]
-
-                                                        var formdata = new FormData();
-                                                        formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
-                                                        formdata.append("banner_url", data.data.location);
-                                                        formdata.append("csrf", bili_jct);
-                                                        var requestOptions = {
-                                                            method: 'POST',
-                                                            body: formdata,
-                                                            mode: 'cors',
-                                                            credentials: 'include',
-                                                            redirect: 'follow'
-                                                        };
-
-                                                        fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate", requestOptions)
-                                                            .then(response => response.json())
-                                                            .then(result => {
-                                                                if (result.code === 0) {
-                                                                    var requestOptions = {
-                                                                        method: 'GET',
-                                                                        redirect: 'follow',
-                                                                        mode: 'cors',
-                                                                        credentials: 'include'
-                                                                    };
-                                                                    var TransferAID = result.data.aid
-                                                                    fetch(proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID, requestOptions)
-                                                                        .then(response => response.json())
-                                                                        .then(result => {
-                                                                            if (result.code === 0) {
-                                                                                updateArticle(Article, result.data.banner_url, 1)
-                                                                                var formdata = new FormData();
-                                                                                formdata.append("aid", TransferAID);
-                                                                                formdata.append("csrf", bili_jct);
-                                                                                fetch(proxy_domain + "/bilibili/member/x/web/draft/delete", {
-                                                                                    method: 'POST',
-                                                                                    body: formdata,
-                                                                                    mode: 'cors',
-                                                                                    credentials: 'include',
-                                                                                    redirect: 'follow'
-                                                                                })
-
-                                                                            } else {
-                                                                                setAlertModalTitle("读取中转站信息失败")
-                                                                                setAlertModalInfo(result.message)
-                                                                                setAlertModalShowed(true)
-                                                                            }
-                                                                        })
-
-                                                                } else {
-                                                                    setAlertModalTitle("上传图片到中转站失败")
-                                                                    setAlertModalInfo(result.message)
-                                                                    setAlertModalShowed(true)
-                                                                }
-                                                            })
-
-                                                    } else if (data.code === -101) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                        setAlertModalShowed(true)
-
-                                                    } else if (data.code === -111) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("bili_jct填写有误或已过期")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("错误")
-                                                        setAlertModalInfo(data.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-
-                                                })
-                                        }} className="btn btn-secondary ">上传图片
+                                        <button onClick={BiliUploadArticleHeader} className="btn btn-secondary ">上传图片
                                         </button>
                                     </div>
                                 </div>
@@ -1299,72 +1302,7 @@ export default function Page() {
                                             }} className="btn btn-primary  ">选择图片
                                             </button>
                                         </div>
-                                        <button onClick={(e) => {
-
-                                            var formdata = new FormData();
-                                            formdata.append("bucket", "material_up");
-                                            formdata.append("dir", "");
-                                            formdata.append("file", NewBiliArticleListCoverFileRef.current.files[0]);
-                                            formdata.append("csrf", bili_jct);
-
-                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                method: 'POST',
-                                                mode: 'cors',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow'
-                                            })
-                                                .then((res) => res.json())
-                                                .then(data => {
-                                                    if (data.code === 0 || data.code === 20414) {
-                                                        var ArticleList = BiliArticlesList[BiliSelectedArticleList]
-
-                                                        var formdata = new FormData();
-                                                        formdata.append("list_id", ArticleList.id);
-                                                        formdata.append("name", ArticleList.name);
-                                                        formdata.append("summary", ArticleList.summary);
-                                                        formdata.append("image_url", data.data.location);
-                                                        formdata.append("only_list", "true");
-                                                        formdata.append("csrf", bili_jct);
-                                                        var requestOptions = {
-                                                            method: 'POST',
-                                                            body: formdata,
-                                                            mode: 'cors',
-                                                            credentials: 'include',
-                                                            redirect: 'follow'
-                                                        };
-
-                                                        fetch(proxy_domain + "/bilibili/api/x/article/creative/list/update", requestOptions)
-                                                            .then(response => response.json())
-                                                            .then(result => {
-                                                                if (result.code === 0) {
-                                                                    setAlertModalTitle("上传成功")
-                                                                    setAlertModalInfo("请到投稿页面查看上传结果。")
-                                                                    setAlertModalShowed(true)
-                                                                } else {
-                                                                    setAlertModalTitle("上传失败")
-                                                                    setAlertModalInfo(result.message)
-                                                                    setAlertModalShowed(true)
-                                                                }
-                                                            })
-
-                                                    } else if (data.code === -101) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                        setAlertModalShowed(true)
-
-                                                    } else if (data.code === -111) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("bili_jct填写有误或已过期")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("错误")
-                                                        setAlertModalInfo(data.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-
-                                                })
-                                        }} className="btn btn-secondary ">上传图片
+                                        <button onClick={BiliUploadArticleListCover} className="btn btn-secondary ">上传图片
                                         </button>
                                     </div>
                                 </div>
@@ -1424,73 +1362,8 @@ export default function Page() {
                                             </button>
                                         </div>
                                         <div>
-                                            <button className="btn btn-secondary  " onClick={(e) => {
-                                                var formdata = new FormData();
-                                                formdata.append("bucket", "material_up");
-                                                formdata.append("dir", "");
-                                                formdata.append("file", NewBiliLiveroomCoverFileRef.current.files[0]);
-                                                formdata.append("csrf", bili_jct);
-
-                                                fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                    method: 'POST',
-                                                    mode: 'cors',
-                                                    body: formdata,
-                                                    credentials: 'include',
-                                                    redirect: 'follow'
-                                                })
-                                                    .then((res) => res.json())
-                                                    .then(data => {
-                                                        if (data.code === 0 || data.code === 20414) {
-                                                            //data.data.location
-                                                            var myHeaders = new Headers();
-                                                            myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-                                                            var urlencoded = new URLSearchParams();
-                                                            urlencoded.append("platform", " web");
-                                                            urlencoded.append("mobi_app", " web");
-                                                            urlencoded.append("build", " 1");
-                                                            urlencoded.append("cover", data.data.location);
-                                                            //urlencoded.append("coverVertical", data.data.location);
-                                                            urlencoded.append("liveDirectionType", " 2");
-                                                            urlencoded.append("csrf_token", bili_jct);
-                                                            urlencoded.append("csrf", bili_jct);
-                                                            var requestOptions = {
-                                                                method: 'POST',
-                                                                headers: myHeaders,
-                                                                body: urlencoded,
-                                                                redirect: 'follow',
-                                                                credentials: 'include',
-                                                                mode: 'cors',
-                                                            };
-                                                            fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo", requestOptions)
-                                                                .then(response => response.json())
-                                                                .then(result => {
-                                                                    if (result.code === 0) {
-                                                                        setAlertModalTitle("上传成功")
-                                                                        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
-                                                                        setAlertModalShowed(true)
-                                                                    } else {
-                                                                        setAlertModalTitle("上传失败")
-                                                                        setAlertModalInfo(result.message)
-                                                                        setAlertModalShowed(true)
-                                                                    }
-                                                                })
-                                                        } else if (data.code === -101) {
-                                                            setAlertModalTitle("登录信息错误")
-                                                            setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                            setAlertModalShowed(true)
-
-                                                        } else if (data.code === -111) {
-                                                            setAlertModalTitle("登录信息错误")
-                                                            setAlertModalInfo("bili_jct填写有误或已过期")
-                                                            setAlertModalShowed(true)
-                                                        } else {
-                                                            setAlertModalTitle("错误")
-                                                            setAlertModalInfo(data.message)
-                                                            setAlertModalShowed(true)
-                                                        }
-
-                                                    })
-                                            }}>上传图片
+                                            <button className="btn btn-secondary  "
+                                                    onClick={BiliUploadLiveroomCover}>上传图片
                                             </button>
                                         </div>
                                     </div>
@@ -1528,70 +1401,8 @@ export default function Page() {
                                             </button>
                                         </div>
                                         <div>
-                                            <button disabled className="btn btn-secondary  " onClick={(e) => {
-
-                                                var formdata = new FormData();
-                                                formdata.append("bucket", "material_up");
-                                                formdata.append("dir", "");
-                                                formdata.append("file", NewBiliLiveroomShowCoverFileRef.current.files[0]);
-                                                formdata.append("csrf", bili_jct);
-
-                                                fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                    method: 'POST',
-                                                    mode: 'cors',
-                                                    body: formdata,
-                                                    credentials: 'include',
-                                                    redirect: 'follow'
-                                                })
-                                                    .then((res) => res.json())
-                                                    .then(data => {
-                                                        if (data.code === 0 || data.code === 20414) {
-                                                            //data.data.location
-                                                            var urlencoded = new URLSearchParams();
-                                                            urlencoded.append("room_id", BiliLiveroom);
-                                                            urlencoded.append("type", "show");
-                                                            urlencoded.append("url", data.data.location);
-                                                            urlencoded.append("pic_id", 5430701);
-                                                            //urlencoded.append("visit_id", "3ac0l3z9hse0");
-                                                            urlencoded.append("csrf_token", bili_jct);
-                                                            urlencoded.append("csrf", bili_jct);
-                                                            var requestOptions = {
-                                                                method: 'POST',
-                                                                body: urlencoded,
-                                                                redirect: 'follow',
-                                                                credentials: 'include',
-                                                                mode: 'cors',
-                                                            };
-                                                            fetch(proxy_domain + "/bilibili/api/live/room/v1/Cover/replace", requestOptions)
-                                                                .then(response => response.json())
-                                                                .then(result => {
-                                                                    if (result.code === 0) {
-                                                                        setAlertModalTitle("上传成功")
-                                                                        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
-                                                                        setAlertModalShowed(true)
-                                                                    } else {
-                                                                        setAlertModalTitle("上传失败")
-                                                                        setAlertModalInfo(result.message)
-                                                                        setAlertModalShowed(true)
-                                                                    }
-                                                                })
-                                                        } else if (data.code === -101) {
-                                                            setAlertModalTitle("登录信息错误")
-                                                            setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                            setAlertModalShowed(true)
-
-                                                        } else if (data.code === -111) {
-                                                            setAlertModalTitle("登录信息错误")
-                                                            setAlertModalInfo("bili_jct填写有误或已过期")
-                                                            setAlertModalShowed(true)
-                                                        } else {
-                                                            setAlertModalTitle("错误")
-                                                            setAlertModalInfo(data.message)
-                                                            setAlertModalShowed(true)
-                                                        }
-
-                                                    })
-                                            }}>上传图片
+                                            <button disabled className="btn btn-secondary  "
+                                                    onClick={BiliUploadLiveroomShowCover}>上传图片
                                             </button>
                                         </div>
                                     </div>
@@ -1630,74 +1441,8 @@ export default function Page() {
                                             </button>
                                         </div>
                                         <div>
-                                            <button className="btn btn-secondary   " onClick={(e) => {
-
-                                                var formdata = new FormData();
-                                                formdata.append("bucket", "material_up");
-                                                formdata.append("dir", "");
-                                                formdata.append("file", NewBiliLiveroomCoverVerticalFileRef.current.files[0]);
-                                                formdata.append("csrf", bili_jct);
-
-                                                fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                    method: 'POST',
-                                                    mode: 'cors',
-                                                    body: formdata,
-                                                    credentials: 'include',
-                                                    redirect: 'follow'
-                                                })
-                                                    .then((res) => res.json())
-                                                    .then(data => {
-                                                        if (data.code === 0 || data.code === 20414) {
-                                                            //data.data.location
-                                                            var myHeaders = new Headers();
-                                                            myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-                                                            var urlencoded = new URLSearchParams();
-                                                            urlencoded.append("platform", " web");
-                                                            urlencoded.append("mobi_app", " web");
-                                                            urlencoded.append("build", " 1");
-                                                            //urlencoded.append("cover", data.data.location);
-                                                            urlencoded.append("coverVertical", data.data.location);
-                                                            urlencoded.append("liveDirectionType", " 2");
-                                                            urlencoded.append("csrf_token", bili_jct);
-                                                            urlencoded.append("csrf", bili_jct);
-                                                            var requestOptions = {
-                                                                method: 'POST',
-                                                                headers: myHeaders,
-                                                                body: urlencoded,
-                                                                redirect: 'follow',
-                                                                credentials: 'include',
-                                                                mode: 'cors',
-                                                            };
-                                                            fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo", requestOptions)
-                                                                .then(response => response.json())
-                                                                .then(result => {
-                                                                    if (result.code === 0) {
-                                                                        setAlertModalTitle("上传成功")
-                                                                        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
-                                                                        setAlertModalShowed(true)
-                                                                    } else {
-                                                                        setAlertModalTitle("上传失败")
-                                                                        setAlertModalInfo(result.message)
-                                                                        setAlertModalShowed(true)
-                                                                    }
-                                                                })
-                                                        } else if (data.code === -101) {
-                                                            setAlertModalTitle("登录信息错误")
-                                                            setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                            setAlertModalShowed(true)
-
-                                                        } else if (data.code === -111) {
-                                                            setAlertModalTitle("登录信息错误")
-                                                            setAlertModalInfo("bili_jct填写有误或已过期")
-                                                            setAlertModalShowed(true)
-                                                        } else {
-                                                            setAlertModalTitle("错误")
-                                                            setAlertModalInfo(data.message)
-                                                            setAlertModalShowed(true)
-                                                        }
-
-                                                    })
-                                            }}>上传图片
+                                            <button className="btn btn-secondary   "
+                                                    onClick={BiliUploadLiveroomCoverVertical}>上传图片
                                             </button>
                                         </div>
                                     </div>
@@ -1779,84 +1524,7 @@ export default function Page() {
                                             }} className="btn btn-primary  ">选择图片
                                             </button>
                                         </div>
-                                        <button onClick={(e) => {
-
-                                            var formdata = new FormData();
-                                            formdata.append("bucket", "material_up");
-                                            formdata.append("dir", "");
-                                            formdata.append("file", NewBiliMusicCoverFileRef.current.files[0]);
-                                            formdata.append("csrf", bili_jct);
-
-                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                method: 'POST',
-                                                mode: 'cors',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow'
-                                            })
-                                                .then((res) => res.json())
-                                                .then(data => {
-                                                    if (data.code === 0 || data.code === 20414) {
-                                                        var Article = BiliMusics[BiliSelectedMusic]
-
-                                                        var myHeaders = new Headers();
-                                                        myHeaders.append("Content-Type", "application/json");
-
-                                                        var raw = JSON.stringify({
-                                                            "lyric_url": checkDataNull(Article.lyric_url),
-                                                            "cover_url": data.data.location,
-                                                            "song_id": Article.song_id,
-                                                            "album_id": checkDataNull(Article.album_id),
-                                                            "mid": Article.mid,
-                                                            "origin_title": checkDataNull(Article.origin_title),
-                                                            "origin_url": checkDataNull(Article.origin_url),
-                                                            "avid": checkDataNull(Article.avid),
-                                                            "tid": checkDataNull(Article.tid),
-                                                            "cid": checkDataNull(Article.cid),
-                                                            "intro": checkDataNull(Article.intro),
-                                                            "activity_id": checkDataNull(Article.activity_id),
-                                                            "is_bgm": 1,
-                                                            "title": checkDataNull(Article.title)
-                                                        });
-
-                                                        var requestOptions = {
-                                                            method: 'PUT',
-                                                            headers: myHeaders,
-                                                            body: raw,
-                                                            redirect: 'follow'
-                                                        };
-
-                                                        fetch(proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/3755913", requestOptions)
-                                                            .then(response => response.json())
-                                                            .then(result => {
-                                                                if (result.code === 0) {
-                                                                    setAlertModalTitle("上传成功")
-                                                                    setAlertModalInfo("请到投稿页面查看上传结果。")
-                                                                    setAlertModalShowed(true)
-                                                                } else {
-                                                                    setAlertModalTitle("上传失败")
-                                                                    setAlertModalInfo(result.message)
-                                                                    setAlertModalShowed(true)
-                                                                }
-                                                            })
-
-                                                    } else if (data.code === -101) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                        setAlertModalShowed(true)
-
-                                                    } else if (data.code === -111) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("bili_jct填写有误或已过期")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("错误")
-                                                        setAlertModalInfo(data.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-
-                                                })
-                                        }} className="btn btn-secondary ">上传图片
+                                        <button onClick={BiliUploadMusicCover} className="btn btn-secondary ">上传图片
                                         </button>
                                     </div>
                                 </div>
@@ -1904,74 +1572,8 @@ export default function Page() {
                                             }} className="btn btn-primary  ">选择图片
                                             </button>
                                         </div>
-                                        <button onClick={(e) => {
-
-                                            var formdata = new FormData();
-                                            formdata.append("bucket", "material_up");
-                                            formdata.append("dir", "");
-                                            formdata.append("file", NewBiliMusicCompilationsCoverFileRef.current.files[0]);
-                                            formdata.append("csrf", bili_jct);
-
-                                            fetch(proxy_domain + "/bilibili/member/x/material/up/upload", {
-                                                method: 'POST',
-                                                mode: 'cors',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow'
-                                            })
-                                                .then((res) => res.json())
-                                                .then(data => {
-                                                    if (data.code === 0 || data.code === 20414) {
-                                                        var MusicCompilation = BiliMusicCompilations[BiliSelectedMusicCompilations]
-                                                        var myHeaders = new Headers();
-                                                        myHeaders.append("Content-Type", "application/json");
-                                                        var raw = JSON.stringify({
-                                                            "compilation_id": MusicCompilation.compilation_id,
-                                                            "cover_url": data.data.location,
-                                                            "is_synch": 0,
-                                                            "intro": data.data.intro,
-                                                            "title": data.data.title
-                                                        });
-                                                        var requestOptions = {
-                                                            method: 'POST',
-                                                            headers: myHeaders,
-                                                            body: raw,
-                                                            mode: 'cors',
-                                                            credentials: 'include',
-                                                            redirect: 'follow'
-                                                        };
-
-                                                        fetch(proxy_domain + "/bilibili/index/audio/music-service/compilation/update_compilation", requestOptions)
-                                                            .then(response => response.json())
-                                                            .then(result => {
-                                                                if (result.code === 0) {
-                                                                    setAlertModalTitle("上传成功")
-                                                                    setAlertModalInfo("请到投稿页面查看上传结果。")
-                                                                    setAlertModalShowed(true)
-                                                                } else {
-                                                                    setAlertModalTitle("上传失败")
-                                                                    setAlertModalInfo(result.message)
-                                                                    setAlertModalShowed(true)
-                                                                }
-                                                            })
-
-                                                    } else if (data.code === -101) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("SESSDATA填写有误或已过期")
-                                                        setAlertModalShowed(true)
-
-                                                    } else if (data.code === -111) {
-                                                        setAlertModalTitle("登录信息错误")
-                                                        setAlertModalInfo("bili_jct填写有误或已过期")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("错误")
-                                                        setAlertModalInfo(data.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-
-                                                })
-                                        }} className="btn btn-secondary ">上传图片
+                                        <button onClick={BiliUploadMusicCompilationsCover}
+                                                className="btn btn-secondary ">上传图片
                                         </button>
                                     </div>
                                 </div>
@@ -2022,34 +1624,7 @@ export default function Page() {
                                         </button>
                                     </div>
                                     <div>
-                                        <button className="btn btn-secondary" onClick={(e) => {
-                                            var formdata = new FormData();
-                                            formdata.append("dopost", "save");
-                                            formdata.append("DisplayRank", "1000");
-                                            formdata.append("face", NewBiliUserFaceFileRef.current.files[0]);
-                                            var requestOptions = {
-                                                method: 'POST',
-                                                body: formdata,
-                                                credentials: 'include',
-                                                redirect: 'follow',
-                                                mode: 'cors'
-
-                                            };
-
-                                            fetch(proxy_domain + "/bilibili/api/x/member/web/face/update?csrf=" + bili_jct, requestOptions)
-                                                .then(response => response.json())
-                                                .then(result => {
-                                                    if (result.code === 0) {
-                                                        setAlertModalTitle("上传成功")
-                                                        setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
-                                                        setAlertModalShowed(true)
-                                                    } else {
-                                                        setAlertModalTitle("上传失败")
-                                                        setAlertModalInfo(result.message)
-                                                        setAlertModalShowed(true)
-                                                    }
-                                                })
-                                        }}>上传图片
+                                        <button className="btn btn-secondary" onClick={BiliUploadUserFace}>上传图片
                                         </button>
                                     </div>
                                 </div>
