@@ -27,8 +27,6 @@ export default function Page() {
     const [DedeUserID__ckMd5, setDedeUserID__ckMd5] = useState("")
     const [isQrcodeFailed, setQrcodeFailed] = useState(false)
     const [isQrcodeLogin, setQrcodeLogin] = useState(false)
-    const [isBiliLoginFail, setBiliLoginFail] = useState(false)
-    const [BiliLoginFailInfo, setBiliLoginFailInfo] = useState("")
     const [BiliUserFace, setBiliUserFace] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png")
     const [BiliUid, setBiliUid] = useState("")
     const [BiliLiveroomCover, setBiliLiveroomCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp")
@@ -119,7 +117,7 @@ export default function Page() {
                 setAlertModalInfo("bili_jct填写有误或已过期")
                 setAlertModalShowed(true)
             } else if (result.code !== 0) {
-                setAlertModalTitle("上传图片错误")
+                setAlertModalTitle("请求错误")
                 setAlertModalInfo(result.message)
                 setAlertModalShowed(true)
             }
@@ -136,9 +134,10 @@ export default function Page() {
             redirect: 'follow'
         })
         var data = res.json()
+        let code=[0,10003,65006,34002,34004,34005,22001]
         data.then(result => {
-            if (result.code !== 0) {
-                setAlertModalTitle("上传失败")
+            if (!code.includes(result.code)) {
+                setAlertModalTitle("请求错误")
                 setAlertModalInfo(result.message)
                 setAlertModalShowed(true)
             }
@@ -267,6 +266,7 @@ export default function Page() {
             formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("csrf", Cookies.get("bili_jct"));
+            formdata.append("like", 1);
             PostRequest({url: proxy_domain + "/bilibili/api/x/web-interface/archive/like", formdata: formdata})
             formdata = new FormData();
             formdata.append("aid", aid);
@@ -301,15 +301,20 @@ export default function Page() {
         const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
         if (data.code === 0 || data.code === 20414) {
             setBiliLogin(true)
-            setBiliLoginFail(false)
             Cookies.set('isBiliLogin', true, {"path": "/", expires: 365, domain: domain})
             donateUP()
-        } else if (data.code === -101) {
-            setBiliLoginFail(true)
-            setBiliLoginFailInfo("SESSDATA填写有误或已过期")
-        } else if (data.code === -111) {
-            setBiliLoginFail(true)
-            setBiliLoginFailInfo("bili_jct填写有误或已过期")
+        }
+    }
+
+    async function BiliLogoutClickHandler() {
+        var urlencoded = new URLSearchParams();
+        urlencoded.append("biliCSRF", bili_jct);
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/passport/login/exit/v2",
+            formdata: urlencoded
+        })
+        if (result.code === 0) {
+            clearCookie()
         }
     }
 
@@ -719,25 +724,7 @@ export default function Page() {
                            rel="noreferrer">仅清除Cookie</a>
                     </div>
                     <div className="text-center mb-6">
-                        <a onClick={() => {
-                            var urlencoded = new URLSearchParams();
-                            urlencoded.append("biliCSRF", bili_jct);
-                            var requestOptions = {
-                                method: 'POST',
-                                body: urlencoded,
-                                credentials: 'include',
-                                mode: 'cors',
-                                redirect: 'follow'
-
-                            };
-                            fetch(proxy_domain + "/bilibili/passport/login/exit/v2", requestOptions)
-                                .then(response => response.json())
-                                .then(result => {
-                                    if (result.code === 0) {
-                                        clearCookie()
-                                    }
-                                })
-                        }} target="_blank"
+                        <a onClick={BiliLogoutClickHandler} target="_blank"
                            className="btn btn-secondary " rel="noreferrer">完全退出(Cookie会失效)</a>
                     </div>
                 </div>
@@ -808,16 +795,6 @@ export default function Page() {
                 <div className="text-left  font-bold">
                     手动输入Cookie
                 </div>
-                {isBiliLoginFail ? <div className="alert bg-secondary text-secondary-content -lg">
-                    <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6"
-                             fill="none" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>{BiliLoginFailInfo}</span>
-                    </div>
-                </div> : ""}
 
 
                 <div className="grid flex-grow place-items-center gap-4">
