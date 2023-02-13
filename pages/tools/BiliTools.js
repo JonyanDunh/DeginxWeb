@@ -101,7 +101,7 @@ export default function Page() {
     const {data: BiliArticleDraftsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x/web/draft/list" : null, fetcher)
     const {data: BiliJonyanDunhData} = useSWR(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893", fetcher)
     const {data: BiliToolsUserCountsData} = useSWR("https://proxy.deginx.com/bilibili/tools/UserCounts/", fetcher)
-    const {trigger: BiliUploadImage} = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
+    const {trigger: BiliUploadImage, isMutating:isBiliUploadImageMutating} = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
         var formdata = new FormData();
         formdata.append("bucket", "material_up");
         formdata.append("dir", "");
@@ -134,7 +134,7 @@ export default function Page() {
         })
         return data
     })
-    const {trigger: PostRequest} = useSWRMutation("PostRequest", async (url, {arg}) => {
+    const {trigger: PostRequest, isMutating:isBiliPostRequestMutating} = useSWRMutation("PostRequest", async (url, {arg}) => {
         const res = await fetch(arg.url, {
             method: 'POST',
             mode: 'cors',
@@ -160,7 +160,7 @@ export default function Page() {
         })
         return data
     })
-    const {trigger: PutRequest} = useSWRMutation("PostRequest", async (url, {arg}) => {
+    const {trigger: PutRequest, isMutating:isBiliPutRequestMutating} = useSWRMutation("PostRequest", async (url, {arg}) => {
         const res = await fetch(arg.url, {
             method: 'PUT',
             mode: 'cors',
@@ -185,7 +185,7 @@ export default function Page() {
         })
         return data
     })
-    const {trigger: GetRequest} = useSWRMutation("PostRequest", async (url, {arg}) => {
+    const {trigger: GetRequest, isMutating:isBiliGetRequestMutating} = useSWRMutation("PostRequest", async (url, {arg}) => {
         const res = await fetch(arg.url, {
             method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
         })
@@ -1655,6 +1655,14 @@ export default function Page() {
                             <p className="py-4">{AlertModalInfo}</p>
                         </label>
                     </label>
+                {(isBiliUploadImageMutating||isBiliPostRequestMutating||isBiliPutRequestMutating||isBiliGetRequestMutating)?
+                    <div className="toast toast-end">
+                        <div className="alert alert-info">
+                            <div>
+                                <span>正在向服务器请求数据~</span>
+                            </div>
+                        </div>
+                    </div>:""}
                 </div>
 
             )}
