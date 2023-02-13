@@ -110,13 +110,13 @@ export default function Page() {
         const res = await fetch(url, {
             method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
         })
-        if(!res.ok){
+        var data = res?.json()
+        if(!data){
             setAlertModalTitle("请求错误")
             setAlertModalInfo("API网关返回状态码:"+res.status)
             setAlertModalShowed(true)
             return null
         }
-        var data = res.json()
         data.then(result => {
             if (result.code === -101) {
                 setAlertModalTitle("登录信息错误")
@@ -143,13 +143,13 @@ export default function Page() {
             credentials: 'include',
             redirect: 'follow'
         })
-        if(!res.ok){
+        var data = res?.json()
+        if(!data){
             setAlertModalTitle("请求错误")
             setAlertModalInfo("API网关返回状态码:"+res.status)
             setAlertModalShowed(true)
             return null
         }
-        var data = res.json()
         let code = [0, 10003, 65006, 34002, 34004, 34005, 22001]
         data.then(result => {
             if (!code.includes(result.code)) {
@@ -169,16 +169,16 @@ export default function Page() {
             credentials: 'include',
             redirect: 'follow'
         })
-        if(!res.ok){
+        var data = res?.json()
+        if(!data){
             setAlertModalTitle("请求错误")
             setAlertModalInfo("API网关返回状态码:"+res.status)
             setAlertModalShowed(true)
             return null
         }
-        var data = res.json()
         data.then(result => {
             if (result?.code !== 0) {
-                setAlertModalTitle("上传失败")
+                setAlertModalTitle("请求错误")
                 setAlertModalInfo(result.message)
                 setAlertModalShowed(true)
             }
@@ -189,13 +189,7 @@ export default function Page() {
         const res = await fetch(arg.url, {
             method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
         })
-        if(!res.ok){
-            setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:"+res.status)
-            setAlertModalShowed(true)
-            return null
-        }
-        return res.json()
+        return res?.json()
     })
     const ImageLoader = ({src}) => {
         return src
