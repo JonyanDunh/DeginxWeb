@@ -10,17 +10,6 @@ import useSWRMutation from 'swr/mutation'
 
 var UrlDecode = require('url');
 
-function base64ToFile(base64, fileName) {
-    let arr = base64.split(",");
-    let mime = arr[0].match(/:(.*?);/)[1];
-    let bytes = atob(arr[1]);
-    let n = bytes.length;
-    let ia = new Uint8Array(n);
-    while (n--) {
-        ia[n] = bytes.charCodeAt(n);
-    }
-    return new File([ia], fileName, {type: mime});  // 将值抛出去
-}
 
 export default function Page() {
     //const proxy_domain = "https://proxy.deginx.com"
@@ -80,13 +69,6 @@ export default function Page() {
     const AlertRef = React.useRef();
     var getQrcodeInfoTimes = 0
 
-    useEffect(() => {
-        if (Cookies.get("isBiliLogin") === "true") {
-            setBiliLogin(true)
-            setbili_jct(Cookies.get("bili_jct"))
-        }
-
-    }, [])
     const fetcher = url => fetch(url).then(r => r.json())
     const {data: BiliQrcodeData} = useSWR(!isBiliLogin ? proxy_domain + "/bilibili/passport/qrcode/getLoginUrl" : null, fetcher)
     const {data: BiliQrcodeScanData} = useSWR(!isBiliLogin ? (BiliQrcodeData && !isQrcodeLogin && !isQrcodeFailed ? {
@@ -188,6 +170,25 @@ export default function Page() {
         })
         return res.json()
     })
+    const ImageLoader = ({src}) => {
+        return src
+    }
+
+    useEffect(() => {
+        if (Cookies.get("isBiliLogin") === "true") {
+            setBiliLogin(true)
+            setbili_jct(Cookies.get("bili_jct"))
+        }
+
+    }, [])
+    useEffect(() => {
+        async function validateLogin() {
+            const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
+            if (data.code !== 0 && data.code !== 20414) clearCookie();
+        }
+
+        if (Cookies.get("isBiliLogin") === "true") validateLogin()
+    }, [])
     useEffect(() => {
         if (BiliUserInfoData?.data?.mid) setBiliUid(BiliUserInfoData.data.mid)
         if (BiliUserInfoData?.data?.face) setBiliUserFace(BiliUserInfoData.data.face)
@@ -203,7 +204,6 @@ export default function Page() {
         if (BiliArticlesListData?.data?.lists) setBiliArticlesList(BiliArticlesListData.data.lists)
         if (BiliArticlesListData?.data?.lists[0]?.image_url && BiliArticlesListData?.data?.lists[0]?.image_url !== "") setBiliArticleListCover(BiliArticlesListData.data.lists[0].image_url)
     }, [BiliArticlesListData])
-
     useEffect(() => {
         if (BiliVideoSeasonsData?.data?.seasons) setBiliVideoSeasons(BiliVideoSeasonsData.data.seasons)
         if (BiliVideoSeasonsData?.data?.seasons[0]?.season.cover && BiliVideoSeasonsData?.data?.seasons[0]?.season.cover !== "") setBiliVideoSeasonsCover(BiliVideoSeasonsData.data.seasons[0].season.cover)
@@ -231,10 +231,17 @@ export default function Page() {
         }
     }, [BiliArticlesData, BiliArticleDraftsData])
 
-    // useEffect(() => {
-    //     console.log(BiliUploadedImageData)
-    // }, [BiliUploadedImageData])
-
+    function base64ToFile(base64, fileName) {
+        let arr = base64.split(",");
+        let mime = arr[0].match(/:(.*?);/)[1];
+        let bytes = atob(arr[1]);
+        let n = bytes.length;
+        let ia = new Uint8Array(n);
+        while (n--) {
+            ia[n] = bytes.charCodeAt(n);
+        }
+        return new File([ia], fileName, {type: mime});  // 将值抛出去
+    }
 
     function clearCookie() {
         Cookies.remove("SESSDATA", {"path": "/", domain: domain})
@@ -273,17 +280,18 @@ export default function Page() {
         })
     }
 
-    const ImageLoader = ({src}) => {
-        return src
+    function checkDataNull(data) {
+        return data == null ? "" : data
     }
-    useEffect(() => {
-        async function validateLogin() {
-            const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
-            if (data.code !== 0 && data.code !== 20414) clearCookie();
-        }
 
-        if (Cookies.get("isBiliLogin") === "true") validateLogin()
-    }, [])
+    function QrcodeLoginSuccess() {
+        setQrcodeLogin(true)
+        var url = UrlDecode.parse(BiliQrcodeScanData.data.url, true)
+        setSESSDATA(url.query.SESSDATA)
+        setbili_jct(url.query.bili_jct)
+        setDedeUserID(url.query.DedeUserID)
+        setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
+    }
 
     async function BiliLoginClickHandler() {
         Cookies.set('SESSDATA', SESSDATA, {"path": "/", expires: 365, domain: domain})
@@ -637,19 +645,6 @@ export default function Page() {
             }
 
         }
-    }
-
-    function checkDataNull(data) {
-        return data == null ? "" : data
-    }
-
-    function QrcodeLoginSuccess() {
-        setQrcodeLogin(true)
-        var url = UrlDecode.parse(BiliQrcodeScanData.data.url, true)
-        setSESSDATA(url.query.SESSDATA)
-        setbili_jct(url.query.bili_jct)
-        setDedeUserID(url.query.DedeUserID)
-        setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
     }
 
 
