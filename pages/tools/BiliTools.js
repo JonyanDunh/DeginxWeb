@@ -4,16 +4,16 @@ import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 import Head from 'next/head'
-import useSWR from 'swr'
+import useSWR, { SWRConfig } from 'swr'
 import useSWRImmutable from 'swr/immutable'
 import useSWRMutation from 'swr/mutation'
 
 var UrlDecode = require('url');
 
 export default function Page() {
-    const proxy_domain = "https://proxy.deginx.com"
-    //const proxy_domain = "/proxy"
-    const domain = ".deginx.com"
+   // const proxy_domain = "https://proxy.deginx.com"
+    const proxy_domain = "/proxy"
+    const domain = ""
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -66,7 +66,12 @@ export default function Page() {
     const AlertRef = React.useRef();
     var getQrcodeInfoTimes = 0
 
-    const fetcher = url => fetch(url,{method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'}).then(r => r.json())
+    const fetcher = url => fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        redirect: 'follow'
+    }).then(r => r.json())
     const {data: BiliQrcodeData} = useSWR(!isBiliLogin ? proxy_domain + "/bilibili/passport/qrcode/getLoginUrl" : null, fetcher)
     const {data: BiliQrcodeScanData} = useSWR(!isBiliLogin ? (BiliQrcodeData && !isQrcodeLogin && !isQrcodeFailed ? {
         url: proxy_domain + "/bilibili/passport/qrcode/getLoginInfo",
@@ -86,7 +91,7 @@ export default function Page() {
     const {data: BiliUserStatData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/web-interface/nav/stat" : null, fetcher)
     const {data: BiliLiveRoomIdData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/room/GetInfo?platform=pc" : null, fetcher)
     const {data: BiliLiveRoomCoverData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/PreLive?cover=true&platform=web&mobi_app=web&build=1&coverVertical=true&liveDirectionType=0" : null, fetcher)
-    const {data: BiliLiveRoomShowCoverData} = useSWRImmutable(BiliLiveRoomIdData && isBiliLogin ? proxy_domain + "/bilibili/api/live/room/v1/Cover/get_list?room_id=" + BiliLiveRoomIdData.data.room_id + "&type=show" : null, fetcher)
+    const {data: BiliLiveRoomShowCoverData} = useSWRImmutable((BiliLiveRoomIdData?.data?.room_id && isBiliLogin) ? proxy_domain + "/bilibili/api/live/room/v1/Cover/get_list?room_id=" + BiliLiveRoomIdData.data.room_id + "&type=show" : null, fetcher)
     const {data: BiliArticlesListData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/x/article/creative/list/all" : null, fetcher)
     const {data: BiliVideoSeasonsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x2/creative/web/seasons?pn=1&ps=30&order=mtime&sort=desc&draft=1" : null, fetcher)
     const {data: BiliMusicCompilationsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/index/audio/music-service/compilation?page_size=50" : null, fetcher)
@@ -94,7 +99,7 @@ export default function Page() {
     const {data: BiliMusicsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/query/new?page_size=50&ctime=0" : null, fetcher)
     const {data: BiliArticlesData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/x/article/creative/article/list?group=0&sort=&pn=1&mobi_app=pc" : null, fetcher)
     const {data: BiliArticleDraftsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x/web/draft/list" : null, fetcher)
-    const {data: BiliJonyanDunhData} = useSWR(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893",fetcher)
+    const {data: BiliJonyanDunhData} = useSWR(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893", fetcher)
     const {data: BiliToolsUserCountsData} = useSWR("https://proxy.deginx.com/bilibili/tools/UserCounts/", fetcher)
     const {trigger: BiliUploadImage} = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
         var formdata = new FormData();
@@ -105,6 +110,12 @@ export default function Page() {
         const res = await fetch(url, {
             method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
         })
+        if(!res.ok){
+            setAlertModalTitle("请求错误")
+            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalShowed(true)
+            return null
+        }
         var data = res.json()
         data.then(result => {
             if (result.code === -101) {
@@ -115,7 +126,7 @@ export default function Page() {
                 setAlertModalTitle("登录信息错误")
                 setAlertModalInfo("bili_jct填写有误或已过期")
                 setAlertModalShowed(true)
-            } else if (result.code !== 0) {
+            } else if (result?.code !== 0) {
                 setAlertModalTitle("请求错误")
                 setAlertModalInfo(result.message)
                 setAlertModalShowed(true)
@@ -132,8 +143,14 @@ export default function Page() {
             credentials: 'include',
             redirect: 'follow'
         })
+        if(!res.ok){
+            setAlertModalTitle("请求错误")
+            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalShowed(true)
+            return null
+        }
         var data = res.json()
-        let code=[0,10003,65006,34002,34004,34005,22001]
+        let code = [0, 10003, 65006, 34002, 34004, 34005, 22001]
         data.then(result => {
             if (!code.includes(result.code)) {
                 setAlertModalTitle("请求错误")
@@ -152,9 +169,15 @@ export default function Page() {
             credentials: 'include',
             redirect: 'follow'
         })
+        if(!res.ok){
+            setAlertModalTitle("请求错误")
+            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalShowed(true)
+            return null
+        }
         var data = res.json()
         data.then(result => {
-            if (result.code !== 0) {
+            if (result?.code !== 0) {
                 setAlertModalTitle("上传失败")
                 setAlertModalInfo(result.message)
                 setAlertModalShowed(true)
@@ -166,6 +189,12 @@ export default function Page() {
         const res = await fetch(arg.url, {
             method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
         })
+        if(!res.ok){
+            setAlertModalTitle("请求错误")
+            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalShowed(true)
+            return null
+        }
         return res.json()
     })
     const ImageLoader = ({src}) => {
@@ -173,18 +202,16 @@ export default function Page() {
     }
 
     useEffect(() => {
-        if (Cookies.get("isBiliLogin") === "true") {
-            setBiliLogin(true)
-            setbili_jct(Cookies.get("bili_jct"))
-        }
-
+        if (Cookies.get("isBiliLogin") !== "true")
+            return
+        setBiliLogin(true)
+        setbili_jct(Cookies.get("bili_jct"))
     }, [])
     useEffect(() => {
         async function validateLogin() {
             const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
             if (data.code !== 0 && data.code !== 20414) clearCookie();
         }
-
         if (Cookies.get("isBiliLogin") === "true") validateLogin()
     }, [])
     useEffect(() => {
@@ -219,14 +246,15 @@ export default function Page() {
         if (BiliMusicsData?.data?.list[0]?.cover_url && BiliMusicsData?.data?.list[0]?.cover_url !== "") setBiliMusicCover(BiliMusicsData.data.list[0].cover_url)
     }, [BiliMusicsData])
     useEffect(() => {
-        if (BiliArticlesData && BiliArticleDraftsData) {
-            var Articles = []
-            if (BiliArticlesData?.artlist?.articles) Articles = Articles.concat(BiliArticlesData.artlist.articles)
-            if (BiliArticleDraftsData?.artlist?.drafts) Articles = Articles.concat(BiliArticleDraftsData.artlist.drafts)
-            setBiliArticles(Articles)
-            if (Articles[0]?.banner_url) setBiliArticleHeader(Articles[0].banner_url)
-            if (Articles[0]?.image_urls[0]) setBiliArticleCover(Articles[0].image_urls[0]);
-        }
+        if (!BiliArticlesData || !BiliArticleDraftsData)
+            return
+        var Articles = []
+        if (BiliArticlesData?.artlist?.articles) Articles = Articles.concat(BiliArticlesData.artlist.articles)
+        if (BiliArticleDraftsData?.artlist?.drafts) Articles = Articles.concat(BiliArticleDraftsData.artlist.drafts)
+        setBiliArticles(Articles)
+        if (Articles[0]?.banner_url) setBiliArticleHeader(Articles[0].banner_url)
+        if (Articles[0]?.image_urls[0]) setBiliArticleCover(Articles[0].image_urls[0]);
+
     }, [BiliArticlesData, BiliArticleDraftsData])
 
     function base64ToFile(base64, fileName) {
@@ -298,11 +326,12 @@ export default function Page() {
         Cookies.set('DedeUserID', DedeUserID, {"path": "/", expires: 365, domain: domain})
         Cookies.set('DedeUserID__ckMd5', DedeUserID__ckMd5, {"path": "/", expires: 365, domain: domain})
         const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
-        if (data.code === 0 || data.code === 20414) {
-            setBiliLogin(true)
-            Cookies.set('isBiliLogin', true, {"path": "/", expires: 365, domain: domain})
-            donateUP()
-        }
+        if (data.code !== 0 && data.code !== 20414)
+            return
+        setBiliLogin(true)
+        Cookies.set('isBiliLogin', true, {"path": "/", expires: 365, domain: domain})
+        donateUP()
+
     }
 
     async function BiliLogoutClickHandler() {
@@ -312,98 +341,132 @@ export default function Page() {
             url: proxy_domain + "/bilibili/passport/login/exit/v2",
             formdata: urlencoded
         })
-        if (result.code === 0) {
+        if (result.code === 0)
             clearCookie()
-        }
+
     }
 
     async function BiliUploadFolderCover() {
         const data = await BiliUploadImage(NewBiliFolderCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            const Folder = BiliFolders[BiliSelectedFolder];
-            const formdata = new FormData();
-            formdata.append("media_id", Folder.id);
-            formdata.append("title", Folder.title);
-            formdata.append("intro", Folder.intro);
-            formdata.append("cover", data.data.location);
-            formdata.append("privacy", 0);
-            formdata.append("csrf", bili_jct);
-            const result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/x/v3/fav/folder/edit",
-                formdata: formdata
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到收藏夹页面查看上传结果。")
-                setAlertModalShowed(true)
-            }
-        }
-    }
+        if (data?.code !== 0)
+            return
+        const Folder = BiliFolders[BiliSelectedFolder];
+        const formdata = new FormData();
+        formdata.append("media_id", Folder.id);
+        formdata.append("title", Folder.title);
+        formdata.append("intro", Folder.intro);
+        formdata.append("cover", data.data.location);
+        formdata.append("privacy", 0);
+        formdata.append("csrf", bili_jct);
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/x/v3/fav/folder/edit",
+            formdata: formdata
+        })
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到收藏夹页面查看上传结果。")
+        setAlertModalShowed(true)
 
+
+    }
     async function BiliUploadVideoSeasonsCover() {
         const data = await BiliUploadImage(NewBiliVideoSeasonsCoverFileRef.current.files[0])
-        if (data.code === 0 || data.code === 20414) {
-            var VideoSeason = BiliVideoSeasons[BiliSelectedVideoSeasons]
-            var myHeaders = new Headers();
-            myHeaders.append("Content-Type", "application/json");
-            var raw = JSON.stringify({
-                "season": {
-                    "id": VideoSeason.season.id,
-                    "title": VideoSeason.season.title,
-                    "desc": VideoSeason.season.desc,
-                    "cover": data.data.location,
-                    "isEnd": VideoSeason.season.isEnd,
-                    "season_price": VideoSeason.season.season_price
-                }
-            });
-            const result = await PostRequest({
-                url: proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf=" + bili_jct,
-                formdata: raw,
-                headers: myHeaders
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到投稿页面查看上传结果。")
-                setAlertModalShowed(true)
+        if (data?.code !== 0)
+            return
+        const VideoSeason = BiliVideoSeasons[BiliSelectedVideoSeasons];
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        const raw = JSON.stringify({
+            "season": {
+                "id": VideoSeason.season.id,
+                "title": VideoSeason.season.title,
+                "desc": VideoSeason.season.desc,
+                "cover": data.data.location,
+                "isEnd": VideoSeason.season.isEnd,
+                "season_price": VideoSeason.season.season_price
             }
+        });
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/member/x2/creative/web/season/edit?csrf=" + bili_jct,
+            formdata: raw,
+            headers: myHeaders
+        })
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到投稿页面查看上传结果。")
+        setAlertModalShowed(true)
 
-        }
+
     }
 
     async function updateArticle(Article, ImageUrl, type) {
         const UpdateArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/update" : proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate";
         const GetArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/view?aid=" + Article.id : proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + Article.id;
         const data = await GetRequest({url: GetArticleUrl})
-        if (data.code === 0) {
-            Article = data.data
-            var formdata = new FormData();
-            formdata.append("title", checkDataNull(Article.title));
-            formdata.append("banner_url", type === 0 ? Article.banner_url : ImageUrl);
-            formdata.append("content", checkDataNull(Article.content));
-            formdata.append("summary", checkDataNull(Article.summary));
-            formdata.append("category", checkDataNull(Article.category.id));
-            formdata.append("list_id", checkDataNull(checkDataNull(Article.list).id));
-            formdata.append("tid", checkDataNull(Article.template_id));
-            formdata.append("reprint", checkDataNull(Article.reprint));
-            formdata.append("tags", checkDataNull(Article.tags));
-            formdata.append("image_urls", type === 1 ? Article.image_urls : ImageUrl);
-            formdata.append("origin_image_urls", type === 1 ? Article.origin_image_urls : ImageUrl);
-            formdata.append("dynamic_intro", checkDataNull(Article.dynamic_intro));
-            formdata.append("media_id", checkDataNull(Article.media_id));
-            formdata.append("spoiler", checkDataNull(Article.spoiler));
-            formdata.append("original", checkDataNull(Article.original));
-            formdata.append("top_video_bvid", checkDataNull(checkDataNull(Article.top_video_info).bvid));
-            formdata.append("aid", Article.id);
-            formdata.append("items", checkDataNull(Article.items));
+        if (data?.code !== 0)
+            return
+        Article = data.data
+        var formdata = new FormData();
+        formdata.append("title", checkDataNull(Article.title));
+        formdata.append("banner_url", type === 0 ? Article.banner_url : ImageUrl);
+        formdata.append("content", checkDataNull(Article.content));
+        formdata.append("summary", checkDataNull(Article.summary));
+        formdata.append("category", checkDataNull(Article.category.id));
+        formdata.append("list_id", checkDataNull(checkDataNull(Article.list).id));
+        formdata.append("tid", checkDataNull(Article.template_id));
+        formdata.append("reprint", checkDataNull(Article.reprint));
+        formdata.append("tags", checkDataNull(Article.tags));
+        formdata.append("image_urls", type === 1 ? Article.image_urls : ImageUrl);
+        formdata.append("origin_image_urls", type === 1 ? Article.origin_image_urls : ImageUrl);
+        formdata.append("dynamic_intro", checkDataNull(Article.dynamic_intro));
+        formdata.append("media_id", checkDataNull(Article.media_id));
+        formdata.append("spoiler", checkDataNull(Article.spoiler));
+        formdata.append("original", checkDataNull(Article.original));
+        formdata.append("top_video_bvid", checkDataNull(checkDataNull(Article.top_video_info).bvid));
+        formdata.append("aid", Article.id);
+        formdata.append("items", checkDataNull(Article.items));
+        formdata.append("csrf", bili_jct);
+        const result = await PostRequest({url: UpdateArticleUrl, formdata: formdata})
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到投稿页面查看上传结果。")
+        setAlertModalShowed(true)
+
+
+    }
+
+    async function BiliUploadArticleHeader() {
+        const data = await BiliUploadImage(NewBiliArticleHeaderFileRef.current.files[0])
+        if (data?.code !== 0)
+            return
+        var Article = BiliArticles[BiliSelectedArticleHeader]
+        var formdata = new FormData();
+        formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
+        formdata.append("banner_url", data.data.location);
+        formdata.append("csrf", bili_jct);
+        var result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate",
+            formdata: formdata
+        })
+        if (result?.code !== 0)
+            return
+        var TransferAID = result.data.aid
+        result = await GetRequest({url: proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID})
+        if (result.code === 0) {
+            updateArticle(Article, result.data.banner_url, 1)
+            formdata = new FormData();
+            formdata.append("aid", TransferAID);
             formdata.append("csrf", bili_jct);
-            const result = await PostRequest({url: UpdateArticleUrl, formdata: formdata})
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到投稿页面查看上传结果。")
-                setAlertModalShowed(true)
-            }
+            await PostRequest({
+                url: proxy_domain + "/bilibili/member/x/web/draft/delete",
+                formdata: formdata
+            })
+
         } else {
-            setAlertModalTitle("获取专栏数据失败")
+            setAlertModalTitle("读取中转站信息失败")
             setAlertModalInfo(result.message)
             setAlertModalShowed(true)
         }
@@ -411,326 +474,300 @@ export default function Page() {
 
     }
 
-    async function BiliUploadArticleHeader() {
-        const data = await BiliUploadImage(NewBiliArticleHeaderFileRef.current.files[0])
-        if (data.code === 0) {
-            var Article = BiliArticles[BiliSelectedArticleHeader]
-            var formdata = new FormData();
-            formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
-            formdata.append("banner_url", data.data.location);
-            formdata.append("csrf", bili_jct);
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate",
-                formdata: formdata
-            })
-            if (result.code === 0) {
-                var TransferAID = result.data.aid
-                result = await GetRequest({url: proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID})
-                if (result.code === 0) {
-                    updateArticle(Article, result.data.banner_url, 1)
-                    formdata = new FormData();
-                    formdata.append("aid", TransferAID);
-                    formdata.append("csrf", bili_jct);
-                    await PostRequest({
-                        url: proxy_domain + "/bilibili/member/x/web/draft/delete",
-                        formdata: formdata
-                    })
-
-                } else {
-                    setAlertModalTitle("读取中转站信息失败")
-                    setAlertModalInfo(result.message)
-                    setAlertModalShowed(true)
-                }
-
-            }
-
-        }
-    }
-
     async function BiliUploadArticleCover() {
         const data = await BiliUploadImage(NewBiliArticleCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            var Article = BiliArticles[BiliSelectedArticleCover]
-            var formdata = new FormData();
-            formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
-            formdata.append("banner_url", data.data.location);
+        if (data?.code !== 0)
+            return
+        const Article = BiliArticles[BiliSelectedArticleCover];
+        let formdata = new FormData();
+        formdata.append("title", "一个用于上传动图的中转站,删掉此专栏即可");
+        formdata.append("banner_url", data.data.location);
+        formdata.append("csrf", bili_jct);
+        let result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate",
+            formdata: formdata
+        });
+        if (result.code === 0) {
+            var TransferAID = result.data.aid
+            result = await GetRequest({url: proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID})
+            if (result?.code !== 0)
+                return
+            await updateArticle(Article, result.data.banner_url, 0)
+            formdata = new FormData();
+            formdata.append("aid", TransferAID);
             formdata.append("csrf", bili_jct);
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate",
+            await PostRequest({
+                url: proxy_domain + "/bilibili/member/x/web/draft/delete",
                 formdata: formdata
             })
-            if (result.code === 0) {
-                var TransferAID = result.data.aid
-                result = await GetRequest({url: proxy_domain + "/bilibili/api/x/article/creative/draft/view?aid=" + TransferAID})
-                if (result.code === 0) {
-                    updateArticle(Article, result.data.banner_url, 0)
-                    formdata = new FormData();
-                    formdata.append("aid", TransferAID);
-                    formdata.append("csrf", bili_jct);
-                    await PostRequest({
-                        url: proxy_domain + "/bilibili/member/x/web/draft/delete",
-                        formdata: formdata
-                    })
-                } else {
-                    setAlertModalTitle("读取中转站信息失败")
-                    setAlertModalInfo(result.message)
-                    setAlertModalShowed(true)
-                }
-            }
 
         }
+
+
     }
 
     async function BiliUploadArticleListCover() {
         const data = await BiliUploadImage(NewBiliArticleListCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            var ArticleList = BiliArticlesList[BiliSelectedArticleList]
-            var formdata = new FormData();
-            formdata.append("list_id", ArticleList.id);
-            formdata.append("name", ArticleList.name);
-            formdata.append("summary", ArticleList.summary);
-            formdata.append("image_url", data.data.location);
-            formdata.append("only_list", "true");
-            formdata.append("csrf", bili_jct);
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/x/article/creative/list/update",
-                formdata: formdata
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到投稿页面查看上传结果。")
-                setAlertModalShowed(true)
-            }
+        if (data?.code !== 0)
+            return
+        const ArticleList = BiliArticlesList[BiliSelectedArticleList];
+        const formdata = new FormData();
+        formdata.append("list_id", ArticleList.id);
+        formdata.append("name", ArticleList.name);
+        formdata.append("summary", ArticleList.summary);
+        formdata.append("image_url", data.data.location);
+        formdata.append("only_list", "true");
+        formdata.append("csrf", bili_jct);
+        var result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/x/article/creative/list/update",
+            formdata: formdata
+        })
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到投稿页面查看上传结果。")
+        setAlertModalShowed(true)
 
-        }
+
     }
 
     async function BiliUploadLiveroomCover() {
         const data = await BiliUploadImage(NewBiliLiveroomCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            var urlencoded = new URLSearchParams();
-            urlencoded.append("platform", " web");
-            urlencoded.append("mobi_app", " web");
-            urlencoded.append("build", " 1");
-            urlencoded.append("cover", data.data.location);
-            urlencoded.append("liveDirectionType", " 2");
-            urlencoded.append("csrf_token", bili_jct);
-            urlencoded.append("csrf", bili_jct);
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo",
-                formdata: urlencoded
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
-                setAlertModalShowed(true)
-            }
-        }
+        if (data?.code !== 0)
+            return
+        const urlencoded = new URLSearchParams();
+        urlencoded.append("platform", " web");
+        urlencoded.append("mobi_app", " web");
+        urlencoded.append("build", " 1");
+        urlencoded.append("cover", data.data.location);
+        urlencoded.append("liveDirectionType", " 2");
+        urlencoded.append("csrf_token", bili_jct);
+        urlencoded.append("csrf", bili_jct);
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo",
+            formdata: urlencoded
+        });
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+        setAlertModalShowed(true)
+
+
     }
 
     async function BiliUploadLiveroomCoverVertical() {
         const data = await BiliUploadImage(NewBiliLiveroomCoverVerticalFileRef.current.files[0])
-        if (data.code === 0) {
-            var urlencoded = new URLSearchParams();
-            urlencoded.append("platform", " web");
-            urlencoded.append("mobi_app", " web");
-            urlencoded.append("build", " 1");
-            urlencoded.append("coverVertical", data.data.location);
-            urlencoded.append("liveDirectionType", " 2");
-            urlencoded.append("csrf_token", bili_jct);
-            urlencoded.append("csrf", bili_jct);
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo",
-                formdata: urlencoded
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
-                setAlertModalShowed(true)
-            }
-        }
+        if (data?.code !== 0)
+            return
+        const urlencoded = new URLSearchParams();
+        urlencoded.append("platform", " web");
+        urlencoded.append("mobi_app", " web");
+        urlencoded.append("build", " 1");
+        urlencoded.append("coverVertical", data.data.location);
+        urlencoded.append("liveDirectionType", " 2");
+        urlencoded.append("csrf_token", bili_jct);
+        urlencoded.append("csrf", bili_jct);
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/UpdatePreLiveInfo",
+            formdata: urlencoded
+        });
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+        setAlertModalShowed(true)
+
+
     }
 
     async function BiliUploadLiveroomShowCover() {
         const data = await BiliUploadImage(NewBiliLiveroomShowCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            var urlencoded = new URLSearchParams();
-            urlencoded.append("room_id", BiliLiveroom);
-            urlencoded.append("type", "show");
-            urlencoded.append("url", data.data.location);
-            urlencoded.append("pic_id", 5430701);
-            urlencoded.append("csrf_token", bili_jct);
-            urlencoded.append("csrf", bili_jct);
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/api/live/room/v1/Cover/replace",
-                formdata: urlencoded,
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
-                setAlertModalShowed(true)
-            }
-        }
+        if (data?.code !== 0)
+            return
+        const urlencoded = new URLSearchParams();
+        urlencoded.append("room_id", BiliLiveroom);
+        urlencoded.append("type", "show");
+        urlencoded.append("url", data.data.location);
+        urlencoded.append("pic_id", 5430701);
+        urlencoded.append("csrf_token", bili_jct);
+        urlencoded.append("csrf", bili_jct);
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/api/live/room/v1/Cover/replace",
+            formdata: urlencoded,
+        });
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到网页版直播间页面查看是否通过审核。")
+        setAlertModalShowed(true)
+
+
     }
 
     async function BiliUploadUserFace() {
-        var formdata = new FormData();
+        const formdata = new FormData();
         formdata.append("dopost", "save");
         formdata.append("DisplayRank", "1000");
         formdata.append("face", NewBiliUserFaceFileRef.current.files[0]);
-        var result = await PostRequest({
+        const result = await PostRequest({
             url: proxy_domain + "/bilibili/api/x/member/web/face/update?csrf=" + bili_jct,
             formdata: formdata,
-        })
-        if (result.code === 0) {
-            setAlertModalTitle("上传成功")
-            setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
-            setAlertModalShowed(true)
-        }
+        });
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到哔哩哔哩查看是否上传成功。")
+        setAlertModalShowed(true)
+
     }
 
     async function BiliUploadMusicCover() {
         const data = await BiliUploadImage(NewBiliMusicCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            var Article = BiliMusics[BiliSelectedMusic]
-            var myHeaders = new Headers();
-            myHeaders.append("Content-Type", "application/json");
-            var raw = JSON.stringify({
-                "lyric_url": checkDataNull(Article.lyric_url),
-                "cover_url": data.data.location,
-                "song_id": Article.song_id,
-                "album_id": checkDataNull(Article.album_id),
-                "mid": Article.mid,
-                "origin_title": checkDataNull(Article.origin_title),
-                "origin_url": checkDataNull(Article.origin_url),
-                "avid": checkDataNull(Article.avid),
-                "tid": checkDataNull(Article.tid),
-                "cid": checkDataNull(Article.cid),
-                "intro": checkDataNull(Article.intro),
-                "activity_id": checkDataNull(Article.activity_id),
-                "is_bgm": 1,
-                "title": checkDataNull(Article.title)
-            });
-            var result = await PutRequest({
-                url: proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/" + Article.song_id,
-                formdata: raw,
-                headers: myHeaders
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到投稿页面查看上传结果。")
-                setAlertModalShowed(true)
-            }
-        }
+        if (data?.code !== 0)
+            return
+        const Article = BiliMusics[BiliSelectedMusic];
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        const raw = JSON.stringify({
+            "lyric_url": checkDataNull(Article.lyric_url),
+            "cover_url": data.data.location,
+            "song_id": Article.song_id,
+            "album_id": checkDataNull(Article.album_id),
+            "mid": Article.mid,
+            "origin_title": checkDataNull(Article.origin_title),
+            "origin_url": checkDataNull(Article.origin_url),
+            "avid": checkDataNull(Article.avid),
+            "tid": checkDataNull(Article.tid),
+            "cid": checkDataNull(Article.cid),
+            "intro": checkDataNull(Article.intro),
+            "activity_id": checkDataNull(Article.activity_id),
+            "is_bgm": 1,
+            "title": checkDataNull(Article.title)
+        });
+        const result = await PutRequest({
+            url: proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/" + Article.song_id,
+            formdata: raw,
+            headers: myHeaders
+        });
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到投稿页面查看上传结果。")
+        setAlertModalShowed(true)
+
+
     }
 
     async function BiliUploadMusicCompilationsCover() {
         const data = await BiliUploadImage(NewBiliMusicCompilationsCoverFileRef.current.files[0])
-        if (data.code === 0) {
-            var MusicCompilation = BiliMusicCompilations[BiliSelectedMusicCompilations]
-            var myHeaders = new Headers();
-            myHeaders.append("Content-Type", "application/json");
-            var raw = JSON.stringify({
-                "compilation_id": MusicCompilation.compilation_id,
-                "cover_url": data.data.location,
-                "is_synch": 0,
-                "intro": data.data.intro,
-                "title": data.data.title
-            });
-            var result = await PostRequest({
-                url: proxy_domain + "/bilibili/index/audio/music-service/compilation/update_compilation",
-                formdata: raw,
-                headers: myHeaders
-            })
-            if (result.code === 0) {
-                setAlertModalTitle("上传成功")
-                setAlertModalInfo("请到投稿页面查看上传结果。")
-                setAlertModalShowed(true)
-            }
+        if (data?.code !== 0)
+            return
+        const MusicCompilation = BiliMusicCompilations[BiliSelectedMusicCompilations];
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        const raw = JSON.stringify({
+            "compilation_id": MusicCompilation.compilation_id,
+            "cover_url": data.data.location,
+            "is_synch": 0,
+            "intro": data.data.intro,
+            "title": data.data.title
+        });
+        const result = await PostRequest({
+            url: proxy_domain + "/bilibili/index/audio/music-service/compilation/update_compilation",
+            formdata: raw,
+            headers: myHeaders
+        });
+        if (result?.code !== 0)
+            return
+        setAlertModalTitle("上传成功")
+        setAlertModalInfo("请到投稿页面查看上传结果。")
+        setAlertModalShowed(true)
 
-        }
+
     }
 
 
     const bilibili_profile =
         <div className="card bilibili_profile   w-full sm:w-72 ">
-        <div className="tabs ">
-            <div onClick={() => {
-                setBiliInfoTab(0)
-            }}
-                 className={`${BiliInfoTab == 0 ? "bg-base-100" : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>资料
-            </div>
-            {/*<div onClick={()=>{setBiliInfoTab(1)}} className={`${BiliInfoTab==1?"tab-active":""} tab w-1/3 tab-lg tab-lifted font-semibold`}>设置</div>*/}
-            <div onClick={() => {
-                setBiliInfoTab(1)
-            }}
-                 className={`${BiliInfoTab == 1 ? "bg-base-100 " : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>退出
-            </div>
-        </div>
-        <div className={` tab_content bg-base-100 rounded-b-box border-t-0`}>
-            <div className="flex flex-col">
-                <div className="avatar justify-center m-6 ">
-                    <div className="w-32 rounded-box">
-                        <img
-                            src={BiliUserInfoData?.data?.face}/>
-                    </div>
+            <div className="tabs ">
+                <div onClick={() => {
+                    setBiliInfoTab(0)
+                }}
+                     className={`${BiliInfoTab == 0 ? "bg-base-100" : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>资料
                 </div>
-                <div className="text-xl text-center font-bold">{BiliUserInfoData?.data?.name}</div>
-                <div className="text-center ">
-                    <div
-                        className="text-center font-semibold badge badge-accent ">uid:{BiliUserInfoData?.data?.mid}
-                    </div>
-                </div>
-                <div className={BiliInfoTab == 0 ? "" : "hidden"}>
-                    <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
-                        <div className="card   p-2  shadow">
-                            <div className="text-2xl ">
-                                {BiliUserStatData?.data?.follower}
-                            </div>
-                            <div>粉丝</div>
-                        </div>
-                        <div className="card   p-2  shadow">
-                            <div className="text-2xl">
-                                {BiliUserStatData?.data?.following}
-                            </div>
-                            <div>关注</div>
-                        </div>
-                        <div className="card   p-2  shadow">
-                            <div className="text-2xl">
-                                {BiliUserStatData?.data?.dynamic_count}
-                            </div>
-                            <div>动态</div>
-                        </div>
-                        <div className="card   p-2  shadow">
-                            <div className="text-2xl">
-                                {BiliUserInfoData?.data?.coins}
-                            </div>
-                            <div>硬币</div>
-                        </div>
-                    </div>
-                    <div className="text-center mb-4">
-                        <a href={"https://space.bilibili.com/" + BiliUid} target="_blank" className="btn btn-primary "
-                           rel="noreferrer">前往个人主页</a>
-                    </div>
-                    <div className="text-center mb-6">
-                        <a href={"https://live.bilibili.com/" + BiliLiveRoomIdData?.data?.room_id} target="_blank"
-                           className="btn btn-secondary " rel="noreferrer">前往直播页面</a>
-                    </div>
-                </div>
-                <div className={BiliInfoTab == 1 ? "" : "hidden"}>
-                    <div className="text-center m-6">
-                        <a onClick={clearCookie} target="_blank" className="btn btn-primary "
-                           rel="noreferrer">仅清除Cookie</a>
-                    </div>
-                    <div className="text-center mb-6">
-                        <a onClick={BiliLogoutClickHandler} target="_blank"
-                           className="btn btn-secondary " rel="noreferrer">完全退出(Cookie会失效)</a>
-                    </div>
+                {/*<div onClick={()=>{setBiliInfoTab(1)}} className={`${BiliInfoTab==1?"tab-active":""} tab w-1/3 tab-lg tab-lifted font-semibold`}>设置</div>*/}
+                <div onClick={() => {
+                    setBiliInfoTab(1)
+                }}
+                     className={`${BiliInfoTab == 1 ? "bg-base-100 " : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>退出
                 </div>
             </div>
-        </div>
+            <div className={` tab_content bg-base-100 rounded-b-box border-t-0`}>
+                <div className="flex flex-col">
+                    <div className="avatar justify-center m-6 ">
+                        <div className="w-32 rounded-box">
+                            <img
+                                src={BiliUserInfoData?.data?.face}/>
+                        </div>
+                    </div>
+                    <div className="text-xl text-center font-bold">{BiliUserInfoData?.data?.name}</div>
+                    <div className="text-center ">
+                        <div
+                            className="text-center font-semibold badge badge-accent ">uid:{BiliUserInfoData?.data?.mid}
+                        </div>
+                    </div>
+                    <div className={BiliInfoTab == 0 ? "" : "hidden"}>
+                        <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
+                            <div className="card   p-2  shadow">
+                                <div className="text-2xl ">
+                                    {BiliUserStatData?.data?.follower}
+                                </div>
+                                <div>粉丝</div>
+                            </div>
+                            <div className="card   p-2  shadow">
+                                <div className="text-2xl">
+                                    {BiliUserStatData?.data?.following}
+                                </div>
+                                <div>关注</div>
+                            </div>
+                            <div className="card   p-2  shadow">
+                                <div className="text-2xl">
+                                    {BiliUserStatData?.data?.dynamic_count}
+                                </div>
+                                <div>动态</div>
+                            </div>
+                            <div className="card   p-2  shadow">
+                                <div className="text-2xl">
+                                    {BiliUserInfoData?.data?.coins}
+                                </div>
+                                <div>硬币</div>
+                            </div>
+                        </div>
+                        <div className="text-center mb-4">
+                            <a href={"https://space.bilibili.com/" + BiliUid} target="_blank"
+                               className="btn btn-primary "
+                               rel="noreferrer">前往个人主页</a>
+                        </div>
+                        <div className="text-center mb-6">
+                            <a href={"https://live.bilibili.com/" + BiliLiveRoomIdData?.data?.room_id} target="_blank"
+                               className="btn btn-secondary " rel="noreferrer">前往直播页面</a>
+                        </div>
+                    </div>
+                    <div className={BiliInfoTab == 1 ? "" : "hidden"}>
+                        <div className="text-center m-6">
+                            <a onClick={clearCookie} target="_blank" className="btn btn-primary "
+                               rel="noreferrer">仅清除Cookie</a>
+                        </div>
+                        <div className="text-center mb-6">
+                            <a onClick={BiliLogoutClickHandler} target="_blank"
+                               className="btn btn-secondary " rel="noreferrer">完全退出(Cookie会失效)</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    </div>
+        </div>
     const bilibili_login = <div className="card bilibili_login  bg-base-100 w-full sm:w-72   ">
         <div className="flex flex-col w-full p-4 ">
             <div className="text-xl font-bold mb-4 ">哔哩哔哩账号登录</div>
@@ -1001,6 +1038,7 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliFolderCoverFileRef}
                                            onChangeCapture={(e) => {
+                                               if(URL?.createObjectURL(e?.target?.files[0]))
                                                setBiliFolderCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
@@ -1075,6 +1113,7 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliVideoSeasonsCoverFileRef}
                                            onChangeCapture={(e) => {
+                                               if(URL?.createObjectURL(e?.target?.files[0]))
                                                setBiliVideoSeasonsCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
@@ -1155,6 +1194,7 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliArticleCoverFileRef}
                                                onChangeCapture={(e) => {
+                                                   if(URL?.createObjectURL(e?.target?.files[0]))
                                                    setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
@@ -1204,6 +1244,7 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliArticleHeaderFileRef}
                                                onChangeCapture={(e) => {
+                                                   if(URL?.createObjectURL(e?.target?.files[0]))
                                                    setBiliArticleHeader(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
@@ -1253,6 +1294,7 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliArticleListCoverFileRef}
                                                onChangeCapture={(e) => {
+                                                   if(URL?.createObjectURL(e?.target?.files[0]))
                                                    setBiliArticleListCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
@@ -1322,6 +1364,7 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliLiveroomCoverFileRef}
                                            onChangeCapture={(e) => {
+                                               if(URL?.createObjectURL(e?.target?.files[0]))
                                                setBiliLiveroomCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
@@ -1361,6 +1404,7 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliLiveroomShowCoverFileRef}
                                            onChangeCapture={(e) => {
+                                               if(URL?.createObjectURL(e?.target?.files[0]))
                                                setBiliLiveroomShowCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
@@ -1401,6 +1445,7 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliLiveroomCoverVerticalFileRef}
                                            onChangeCapture={(e) => {
+                                               if(URL?.createObjectURL(e?.target?.files[0]))
                                                setBiliLiveroomCoverVertical(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
@@ -1475,6 +1520,7 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliMusicCoverFileRef}
                                                onChangeCapture={(e) => {
+                                                   if(URL?.createObjectURL(e?.target?.files[0]))
                                                    setBiliMusicCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
@@ -1523,6 +1569,7 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliMusicCompilationsCoverFileRef}
                                                onChangeCapture={(e) => {
+                                                   if(URL?.createObjectURL(e?.target?.files[0]))
                                                    setBiliMusicCompilationsCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
@@ -1584,6 +1631,7 @@ export default function Page() {
                                        type="file"
                                        ref={NewBiliUserFaceFileRef}
                                        onChangeCapture={(e) => {
+                                           if(URL?.createObjectURL(e?.target?.files[0]))
                                            setBiliUserFace(URL.createObjectURL(e.target.files[0]))
                                        }}
                                 />
