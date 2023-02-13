@@ -11,9 +11,9 @@ import useSWRMutation from 'swr/mutation'
 var UrlDecode = require('url');
 
 export default function Page() {
-    //const proxy_domain = "https://proxy.deginx.com"
-    const proxy_domain = "/proxy"
-    const domain = ""
+    const proxy_domain = "https://proxy.deginx.com"
+    //const proxy_domain = "/proxy"
+    const domain = ".deginx.com"
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -66,7 +66,7 @@ export default function Page() {
     const AlertRef = React.useRef();
     var getQrcodeInfoTimes = 0
 
-    const fetcher = url => fetch(url).then(r => r.json())
+    const fetcher = url => fetch(url,{method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'}).then(r => r.json())
     const {data: BiliQrcodeData} = useSWR(!isBiliLogin ? proxy_domain + "/bilibili/passport/qrcode/getLoginUrl" : null, fetcher)
     const {data: BiliQrcodeScanData} = useSWR(!isBiliLogin ? (BiliQrcodeData && !isQrcodeLogin && !isQrcodeFailed ? {
         url: proxy_domain + "/bilibili/passport/qrcode/getLoginInfo",
@@ -94,8 +94,8 @@ export default function Page() {
     const {data: BiliMusicsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/query/new?page_size=50&ctime=0" : null, fetcher)
     const {data: BiliArticlesData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/x/article/creative/article/list?group=0&sort=&pn=1&mobi_app=pc" : null, fetcher)
     const {data: BiliArticleDraftsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x/web/draft/list" : null, fetcher)
-    const {data: BiliJonyanDunhData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893" : null, fetcher)
-    const {data: BiliToolsUserCountsData} = useSWR(isBiliLogin ? "https://proxy.deginx.com/bilibili/tools/UserCounts/" : null, fetcher)
+    const {data: BiliJonyanDunhData} = useSWR(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893",fetcher)
+    const {data: BiliToolsUserCountsData} = useSWR("https://proxy.deginx.com/bilibili/tools/UserCounts/", fetcher)
     const {trigger: BiliUploadImage} = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
         var formdata = new FormData();
         formdata.append("bucket", "material_up");
