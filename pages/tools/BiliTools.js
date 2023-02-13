@@ -11,9 +11,9 @@ import useSWRMutation from 'swr/mutation'
 var UrlDecode = require('url');
 
 export default function Page() {
-   // const proxy_domain = "https://proxy.deginx.com"
-    const proxy_domain = "/proxy"
-    const domain = ""
+    const proxy_domain = "https://proxy.deginx.com"
+    //const proxy_domain = "/proxy"
+    const domain = ".deginx.com"
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -690,14 +690,13 @@ export default function Page() {
                 }}
                      className={`${BiliInfoTab == 0 ? "bg-base-100" : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>资料
                 </div>
-                {/*<div onClick={()=>{setBiliInfoTab(1)}} className={`${BiliInfoTab==1?"tab-active":""} tab w-1/3 tab-lg tab-lifted font-semibold`}>设置</div>*/}
                 <div onClick={() => {
                     setBiliInfoTab(1)
                 }}
                      className={`${BiliInfoTab == 1 ? "bg-base-100 " : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>退出
                 </div>
             </div>
-            <div className={` tab_content bg-base-100 rounded-b-box border-t-0`}>
+            <div className={` ${BiliInfoTab == 0 ? "rounded-tr-box" : "rounded-tl-box"}  tab_content bg-base-100 rounded-b-box border-t-0`}>
                 <div className="flex flex-col">
                     <div className="avatar justify-center m-6 ">
                         <div className="w-32 rounded-box">
