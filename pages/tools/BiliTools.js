@@ -4,8 +4,10 @@ import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 import Head from 'next/head'
+
 var UrlDecode = require('url');
-import useSWR,{ mutate } from 'swr'
+import useSWR, {mutate} from 'swr'
+import useSWRImmutable from 'swr/immutable'
 
 function base64ToFile(base64, fileName) {
     let arr = base64.split(",");
@@ -25,29 +27,20 @@ export default function Page() {
     const domain = ""
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
-    const [JonyanFans, setJonyanFans] = useState("")
     const [AlertModalInfo, setAlertModalInfo] = useState("")
     const [AlertModalTitle, setAlertModalTitle] = useState("")
     const [isBiliLogin, setBiliLogin] = useState(false)
     const [isConfirmedRule, setConfirmedRule] = useState(false)
-    const [BiliLoginQrcode, setBiliLoginQrcode] = useState("https://space.bilibili.com/96876893")
     const [SESSDATA, setSESSDATA] = useState("")
     const [bili_jct, setbili_jct] = useState("")
     const [DedeUserID, setDedeUserID] = useState("")
     const [DedeUserID__ckMd5, setDedeUserID__ckMd5] = useState("")
-    const [BiliQrcodeInfo, setBiliQrcodeInfo] = useState("正在获取登录二维码...")
     const [isQrcodeFailed, setQrcodeFailed] = useState(false)
     const [isQrcodeLogin, setQrcodeLogin] = useState(false)
     const [isBiliLoginFail, setBiliLoginFail] = useState(false)
     const [BiliLoginFailInfo, setBiliLoginFailInfo] = useState("")
-    const [BiliUserName, setBiliUserName] = useState("")
     const [BiliUserFace, setBiliUserFace] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png")
     const [BiliUid, setBiliUid] = useState("")
-    const [BiliCoins, setBiliCoins] = useState("")
-    const [BiliFollowers, setBiliFollowers] = useState("")
-    const [BiliFollowings, setBiliFollowings] = useState("")
-    const [BiliDynamics, setBiliDynamics] = useState("")
-    const [BiliLiveroom, setBiliLiveroom] = useState("")
     const [BiliLiveroomCover, setBiliLiveroomCover] = useState("https://i0.hdslb.com/bfs/new_dyn/7a5fa4189b7b510c2049e17f8b99c2776823116.png@640w_400h.webp")
     const [BiliLiveroomCoverVertical, setBiliLiveroomCoverVertical] = useState("https://i0.hdslb.com/bfs/new_dyn/c827da1aecf4b1990aca9316de835bea6823116.png@1554w.webp")
     const [BiliLiveroomShowCover, setBiliLiveroomShowCover] = useState("https://message.biliimg.com/bfs/im/af244333cc477dfc88302d62222ac96456fc60b5.png")
@@ -82,24 +75,92 @@ export default function Page() {
     const NewBiliMusicCompilationsCoverFileRef = React.useRef();
     const NewBiliMusicCoverFileRef = React.useRef();
     const NewBiliFolderCoverFileRef = React.useRef();
-    const [BiliToolsUserCounts, setBiliToolsUserCounts] = useState(0);
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
     const AlertRef = React.useRef();
-    var getQrcodeInfoTimes=0
+    var getQrcodeInfoTimes = 0
+
+    useEffect(() => {
+        if (Cookies.get("isBiliLogin") === "true") {
+            setBiliLogin(true)
+            setbili_jct(Cookies.get("bili_jct"))
+        }
+
+    }, [])
     const fetcher = url => fetch(url).then(r => r.json())
-    const BiliQrcodeDataFetcher = async (config) => {
+    const {data: BiliQrcodeData} = useSWR(!isBiliLogin ? proxy_domain + "/bilibili/passport/qrcode/getLoginUrl" : null, fetcher)
+    const {data: BiliQrcodeScanData} = useSWR(!isBiliLogin ? (BiliQrcodeData && !isQrcodeLogin && !isQrcodeFailed ? {
+        url: proxy_domain + "/bilibili/passport/qrcode/getLoginInfo",
+        oauthKey: BiliQrcodeData.data.oauthKey
+    } : null) : null, async (config) => {
         var urlencoded = new URLSearchParams();
         urlencoded.append("oauthKey", config.oauthKey);
-        const res = await fetch(config.url,{
+        const res = await fetch(config.url, {
             method: 'POST', body: urlencoded
         })
-        getQrcodeInfoTimes+=1
-        if(getQrcodeInfoTimes>=5)
+        getQrcodeInfoTimes += 1
+        if (getQrcodeInfoTimes >= 60)
             setQrcodeFailed(true)
         return res.json()
-    }
-    const { data:BiliQrcodeData,  isLoading:isBiliQrcodeDataLoading } = useSWR(!(Cookies.get("isBiliLogin") === "true")?proxy_domain + "/bilibili/passport/qrcode/getLoginUrl":null, fetcher)
-    const { data:BiliQrcodeScanData, isLoading:isBiliQrcodeScanDataLoading} = useSWR(!(Cookies.get("isBiliLogin") === "true")?(!isBiliQrcodeDataLoading&&!isQrcodeLogin&&!isQrcodeFailed?{url:proxy_domain + "/bilibili/passport/qrcode/getLoginInfo",oauthKey:BiliQrcodeData.data.oauthKey}:null):null,BiliQrcodeDataFetcher, { refreshInterval: 1000 })
+    }, {refreshInterval: 1000})
+    const {data: BiliUserInfoData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/space/myinfo" : null, fetcher)
+    const {data: BiliUserStatData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/web-interface/nav/stat" : null, fetcher)
+    const {data: BiliLiveRoomIdData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/room/GetInfo?platform=pc" : null, fetcher)
+    const {data: BiliLiveRoomCoverData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/PreLive?cover=true&platform=web&mobi_app=web&build=1&coverVertical=true&liveDirectionType=0" : null, fetcher)
+    const {data: BiliLiveRoomShowCoverData} = useSWRImmutable(BiliLiveRoomIdData && isBiliLogin ? proxy_domain + "/bilibili/api/live/room/v1/Cover/get_list?room_id=" + BiliLiveRoomIdData.data.room_id + "&type=show" : null, fetcher)
+    const {data: BiliArticlesListData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/x/article/creative/list/all" : null, fetcher)
+    const {data: BiliVideoSeasonsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x2/creative/web/seasons?pn=1&ps=30&order=mtime&sort=desc&draft=1" : null, fetcher)
+    const {data: BiliMusicCompilationsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/index/audio/music-service/compilation?page_size=50" : null, fetcher)
+    const {data: BiliFoldersData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/x/v3/fav/folder/created/list?pn=1&ps=50&up_mid=" + Cookies.get("DedeUserID") + "&jsonp=jsonp" : null, fetcher)
+    const {data: BiliMusicsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/query/new?page_size=50&ctime=0" : null, fetcher)
+    const {data: BiliArticlesData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/api/x/article/creative/article/list?group=0&sort=&pn=1&mobi_app=pc" : null, fetcher)
+    const {data: BiliArticleDraftsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x/web/draft/list" : null, fetcher)
+    const {data: BiliJonyanDunhData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893" : null, fetcher)
+    const {data: BiliToolsUserCountsData} = useSWR(isBiliLogin ? "https://proxy.deginx.com/bilibili/tools/UserCounts/" : null, fetcher)
+
+    useEffect(() => {
+        if (BiliUserInfoData?.data?.mid) setBiliUid(BiliUserInfoData.data.mid)
+        if (BiliUserInfoData?.data?.face) setBiliUserFace(BiliUserInfoData.data.face)
+    }, [BiliUserInfoData])
+    useEffect(() => {
+        if (BiliLiveRoomShowCoverData?.data[0]?.url&&BiliLiveRoomShowCoverData?.data[0]?.url!== "") setBiliLiveroomShowCover(BiliLiveRoomShowCoverData?.data[0]?.url)
+    }, [BiliLiveRoomShowCoverData])
+    useEffect(() => {
+        if (BiliLiveRoomCoverData?.data?.cover?.url && BiliLiveRoomCoverData?.data?.cover?.url !== "") setBiliLiveroomCover(BiliLiveRoomCoverData.data.cover.url)
+        if (BiliLiveRoomCoverData?.data?.coverVertical?.url && BiliLiveRoomCoverData?.data?.coverVertical?.url !== "") setBiliLiveroomCoverVertical(BiliLiveRoomCoverData.data.coverVertical.url)
+    }, [BiliLiveRoomCoverData])
+    useEffect(() => {
+        if (BiliArticlesListData?.data?.lists) setBiliArticlesList(BiliArticlesListData.data.lists)
+        if (BiliArticlesListData?.data?.lists[0]?.image_url&&BiliArticlesListData?.data?.lists[0]?.image_url!== "") setBiliArticleListCover(BiliArticlesListData.data.lists[0].image_url)
+    }, [BiliArticlesListData])
+
+    useEffect(() => {
+        if (BiliVideoSeasonsData?.data?.seasons) setBiliVideoSeasons(BiliVideoSeasonsData.data.seasons)
+        if (BiliVideoSeasonsData?.data?.seasons[0]?.season.cover&&BiliVideoSeasonsData?.data?.seasons[0]?.season.cover!== "") setBiliVideoSeasonsCover(BiliVideoSeasonsData.data.seasons[0].season.cover)
+    }, [BiliVideoSeasonsData])
+    useEffect(() => {
+        if(BiliMusicCompilationsData?.data?.list)setBiliMusicCompilations(BiliMusicCompilationsData.data.list)
+        if(BiliMusicCompilationsData?.data?.list[0]?.cover_url&&BiliMusicCompilationsData?.data?.list[0]?.cover_url!== "")setBiliMusicCompilationsCover(BiliMusicCompilationsData.data.list[0].cover_url)
+    }, [BiliMusicCompilationsData])
+    useEffect(() => {
+        if(BiliFoldersData?.data?.list)setBiliFolders(BiliFoldersData.data.list)
+        if(BiliFoldersData?.data?.list[0]?.cover&&BiliFoldersData?.data?.list[0]?.cover!== "")setBiliFolderCover(BiliFoldersData.data.list[0].cover)
+    }, [BiliFoldersData])
+    useEffect(() => {
+        if(BiliMusicsData?.data?.list)setBiliMusics(BiliMusicsData.data.list)
+        if(BiliMusicsData?.data?.list[0]?.cover_url&&BiliMusicsData?.data?.list[0]?.cover_url!== "")setBiliMusicCover(BiliMusicsData.data.list[0].cover_url)
+    }, [BiliMusicsData])
+    useEffect(() => {
+        if(BiliArticlesData&&BiliArticleDraftsData)
+        {
+            var Articles =[]
+            if(BiliArticlesData?.artlist?.articles)Articles =Articles.concat(BiliArticlesData.artlist.articles)
+            if(BiliArticleDraftsData?.artlist?.drafts)Articles =Articles.concat(BiliArticleDraftsData.artlist.drafts)
+            setBiliArticles(Articles)
+            if(Articles[0]?.banner_url)setBiliArticleHeader(Articles[0].banner_url)
+            if(Articles[0]?.image_urls[0])setBiliArticleCover(Articles[0].image_urls[0]);
+        }
+    }, [BiliArticlesData,BiliArticleDraftsData])
+
     function clearCookie() {
         Cookies.remove("SESSDATA", {"path": "/", domain: domain})
         Cookies.remove("bili_jct", {"path": "/", domain: domain})
@@ -107,164 +168,37 @@ export default function Page() {
         Cookies.remove("DedeUserID__ckMd5", {"path": "/", domain: domain})
         window.location.reload()
     }
-
-    function updateBiliInfo() {
-        fetch(proxy_domain + "/bilibili/api/x/space/myinfo", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                setBiliUserName(result.data.name)
-                setBiliUserFace(result.data.face)
-                setBiliUid(result.data.mid)
-                setBiliCoins(result.data.coins)
-
-            })
-        fetch(proxy_domain + "/bilibili/api/x/web-interface/nav/stat", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                setBiliDynamics(result.data.dynamic_count)
-                setBiliFollowers(result.data.follower)
-                setBiliFollowings(result.data.following)
-            })
-        fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/room/GetInfo?platform=pc", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                setBiliLiveroom(result.data.room_id)
-                fetch(proxy_domain + "/bilibili/api/live/room/v1/Cover/get_list?room_id=" + result.data.room_id + "&type=show", {
-                    method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-                })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.data.length !== 0) {
-                            setBiliLiveroomShowCover(result.data[0].url)
-                        }
-
-                    })
-            })
-        fetch(proxy_domain + "/bilibili/api/live/xlive/app-blink/v1/preLive/PreLive?cover=true&platform=web&mobi_app=web&build=1&coverVertical=true&liveDirectionType=0", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.data.cover.url !== "") setBiliLiveroomCover(result.data.cover.url)
-                if (result.data.coverVertical.url !== "") setBiliLiveroomCoverVertical(result.data.coverVertical.url)
-            })
-        fetch(proxy_domain + "/bilibili/api/x/article/creative/article/list?group=0&sort=&pn=1&mobi_app=pc", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                var Articles = []
-                Articles = Articles.concat(result.artlist.articles)
-                fetch(proxy_domain + "/bilibili/member/x/web/draft/list", {
-                    method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-                })
-                    .then(response => response.json())
-                    .then(result => {
-                        Articles = Articles.concat(result.artlist.drafts)
-                        setBiliArticles(Articles)
-                        if (Articles[0] != null) {
-                            if (Articles[0].image_urls[0] != null) setBiliArticleCover(Articles[0].image_urls[0]);
-                            if (Articles[0].banner_url !== "") {
-                                setBiliArticleHeader(Articles[0].banner_url)
-                            }
-
-                        }
-
-                    })
-                setBiliArticles(result.artlist.articles)
-
-            })
-
-        fetch(proxy_domain + "/bilibili/api/x/article/creative/list/all", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0 && result.data.lists != null) {
-                    setBiliArticlesList(result.data.lists)
-                    if (result.data.lists[0].image_url !== "")
-                        setBiliArticleListCover(result.data.lists[0].image_url)
-                }
-            })
-
-        fetch(proxy_domain + "/bilibili/member/x2/creative/web/seasons?pn=1&ps=30&order=mtime&sort=desc&draft=1", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0 && result.data.seasons != null) {
-                    setBiliVideoSeasons(result.data.seasons)
-                    setBiliVideoSeasonsCover(result.data.seasons[0].season.cover)
-                }
-            })
-        fetch(proxy_domain + "/bilibili/index/audio/music-service/compilation?page_size=50", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0 && result.data.list != null) {
-                    setBiliMusicCompilations(result.data.list)
-                    setBiliMusicCompilationsCover(result.data.list[0].cover_url)
-                }
-            })
-        fetch(proxy_domain + "/bilibili/api/x/v3/fav/folder/created/list?pn=1&ps=50&up_mid=" + Cookies.get("DedeUserID") + "&jsonp=jsonp", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0 && result.data.list != null) {
-                    setBiliFolders(result.data.list)
-                    setBiliFolderCover(result.data.list[0].cover)
-                }
-            })
-        fetch(proxy_domain + "/bilibili/index/audio/music-service/createcenter/songs/query/new?page_size=50&ctime=0", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0 && result.data.list != null) {
-                    setBiliMusics(result.data.list)
-                    setBiliMusicCover(result.data.list[0].cover_url)
-                }
-            })
-        var formdata = new FormData();
+    function donateUP() {
+        let formdata = new FormData();
         formdata.append("fid", "96876893");
         formdata.append("csrf", Cookies.get("bili_jct"));
         formdata.append("act", "1");
-
         fetch(proxy_domain + "/bilibili/api/x/relation/modify", {
             method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
         })
-
         let aids = ["949195634", "524192527", "394193741", "971878849", "667881688"]
         aids.map((aid, index) => {
-            var formdata = new FormData();
+            formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("like", 1);
             formdata.append("csrf", Cookies.get("bili_jct"));
             fetch(proxy_domain + "/bilibili/api/x/web-interface/archive/like/triple", {
                 method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
             })
-            var formdata = new FormData();
+            formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("csrf", Cookies.get("bili_jct"));
             fetch(proxy_domain + "/bilibili/api/x/web-interface/archive/like", {
                 method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
             })
-            var formdata = new FormData();
+            formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("multiply", "2");
             formdata.append("csrf", Cookies.get("bili_jct"));
             fetch(proxy_domain + "/bilibili/api/x/web-interface/coin/add", {
                 method: 'POST', body: formdata, mode: 'cors', redirect: 'follow', credentials: 'include'
             })
-            var formdata = new FormData();
+            formdata = new FormData();
             formdata.append("aid", aid);
             formdata.append("played_time", Math.round(Math.random() * (250 - 100)) + 100);
             fetch(proxy_domain + "/bilibili/api/x/click-interface/web/heartbeat", {
@@ -277,25 +211,7 @@ export default function Page() {
         return src
     }
     useEffect(() => {
-        fetch(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.code === 0) {
-                    setJonyanFans(result.data.follower)
-                }
-
-            })
-        fetch("http://proxy.deginx.com/bilibili/tools/UserCounts/", {
-            method: 'GET', redirect: 'follow', mode: 'cors', credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(result => {
-                setBiliToolsUserCounts(result.data.counts)
-            })
         if (Cookies.get("isBiliLogin") === "true") {
-
             var formdata = new FormData();
             formdata.append("bucket", "material_up");
             formdata.append("dir", "");
@@ -307,11 +223,8 @@ export default function Page() {
             })
                 .then((res) => res.json())
                 .then(data => {
-                    if (data.code === 0 || data.code === 20414) {
-                        setbili_jct(Cookies.get("bili_jct"))
-                        setBiliLogin(true)
-                        updateBiliInfo()
-                    } else clearCookie()
+                    if (data.code != 0 && data.code != 20414)
+                        clearCookie()
                 })
 
         }
@@ -339,7 +252,7 @@ export default function Page() {
                     setBiliLogin(true)
                     setBiliLoginFail(false)
                     Cookies.set('isBiliLogin', true, {"path": "/", expires: 365, domain: domain})
-                    updateBiliInfo()
+                    donateUP()
                 } else if (data.code === -101) {
                     setBiliLoginFail(true)
                     setBiliLoginFailInfo("SESSDATA填写有误或已过期")
@@ -355,7 +268,8 @@ export default function Page() {
     function checkDataNull(data) {
         return data == null ? "" : data
     }
-    function QrcodeLoginSuccess(){
+
+    function QrcodeLoginSuccess() {
         setQrcodeLogin(true)
         var url = UrlDecode.parse(BiliQrcodeScanData.data.url, true)
         setSESSDATA(url.query.SESSDATA)
@@ -363,6 +277,7 @@ export default function Page() {
         setDedeUserID(url.query.DedeUserID)
         setDedeUserID__ckMd5(url.query.DedeUserID__ckMd5)
     }
+
     function updateArticle(Article, ImageUrl, type) {
         var UpdateArticleUrl = Article.publish_time !== 0 ? proxy_domain + "/bilibili/api/x/article/creative/article/update" : proxy_domain + "/bilibili/api/x/article/creative/draft/addupdate"
 
@@ -444,38 +359,38 @@ export default function Page() {
                 <div className="avatar justify-center m-6 ">
                     <div className="w-32 rounded-box">
                         <img
-                            src={BiliUserFace}/>
+                            src={BiliUserInfoData?.data?.face}/>
                     </div>
                 </div>
-                <div className="text-xl text-center font-bold">{BiliUserName}</div>
+                <div className="text-xl text-center font-bold">{BiliUserInfoData?.data?.name}</div>
                 <div className="text-center ">
                     <div
-                        className="text-center font-semibold badge badge-accent ">uid:{BiliUid}
+                        className="text-center font-semibold badge badge-accent ">uid:{BiliUserInfoData?.data?.mid}
                     </div>
                 </div>
                 <div className={BiliInfoTab == 0 ? "" : "hidden"}>
                     <div className="text-center  grid grid-cols-2 grid-rows-2 m-6 gap-4">
                         <div className="card   p-2  shadow">
                             <div className="text-2xl ">
-                                {BiliFollowers}
+                                {BiliUserStatData?.data?.follower}
                             </div>
                             <div>粉丝</div>
                         </div>
                         <div className="card   p-2  shadow">
                             <div className="text-2xl">
-                                {BiliFollowings}
+                                {BiliUserStatData?.data?.following}
                             </div>
                             <div>关注</div>
                         </div>
                         <div className="card   p-2  shadow">
                             <div className="text-2xl">
-                                {BiliDynamics}
+                                {BiliUserStatData?.data?.dynamic_count}
                             </div>
                             <div>动态</div>
                         </div>
                         <div className="card   p-2  shadow">
                             <div className="text-2xl">
-                                {BiliCoins}
+                                {BiliUserInfoData?.data?.coins}
                             </div>
                             <div>硬币</div>
                         </div>
@@ -485,7 +400,7 @@ export default function Page() {
                            rel="noreferrer">前往个人主页</a>
                     </div>
                     <div className="text-center mb-6">
-                        <a href={"https://live.bilibili.com/" + BiliLiveroom} target="_blank"
+                        <a href={"https://live.bilibili.com/" + BiliLiveRoomIdData?.data?.room_id} target="_blank"
                            className="btn btn-secondary " rel="noreferrer">前往直播页面</a>
                     </div>
                 </div>
@@ -533,7 +448,7 @@ export default function Page() {
 
                         className={` relative card overflow-hidden ${isQrcodeFailed ? "filter blur-lg" : ""} `}>
                         <Canvas
-                            text={BiliQrcodeData?.data?.url?BiliQrcodeData?.data?.url:"https://space.bilibili.com/96876893"}
+                            text={BiliQrcodeData?.data?.url ? BiliQrcodeData?.data?.url : "https://space.bilibili.com/96876893"}
                             options={{
                                 level: 'H', scale: 4, width: 4, color: {
                                     dark: '#ff6b81', light: '#dff9fb',
@@ -551,8 +466,8 @@ export default function Page() {
                                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <div>
-                                <div>{!isBiliQrcodeScanDataLoading?(BiliQrcodeScanData?.data===-4)?"请使用哔哩哔哩手机客户端扫码登录":(BiliQrcodeScanData?.data===-5?"扫码成功,请在手机点击登录":BiliQrcodeScanData?.message):"正在获取登录二维码..."}</div>
-                                    {BiliQrcodeScanData?.status?QrcodeLoginSuccess():""}
+                                <div>{BiliQrcodeScanData ? (BiliQrcodeScanData?.data === -4) ? "请使用哔哩哔哩手机客户端扫码登录" : (BiliQrcodeScanData?.data === -5 ? "扫码成功,请在手机点击登录" : BiliQrcodeScanData?.message) : "正在获取登录二维码..."}</div>
+                                {BiliQrcodeScanData?.status ? QrcodeLoginSuccess() : ""}
                             </div>
                         </div>
 
@@ -637,18 +552,20 @@ export default function Page() {
             {(<div className="left_content  sm:static">
                 {isBiliLogin ? bilibili_profile : bilibili_login}
                 <a target="_blank"
-                   rel="noreferrer" href="https://space.bilibili.com/96876893" className="stats shadow  mt-4 flex flex-row">
+                   rel="noreferrer" href="https://space.bilibili.com/96876893"
+                   className="stats shadow  mt-4 flex flex-row">
 
 
                     <div className="stat">
                         <div className="stat-figure text-secondary">
                             <div className="avatar ">
                                 <div className="w-16 rounded-full">
-                                    <img src="https://i2.hdslb.com/bfs/face/dfc20ec4a6e62d1604d55be06ce4ff6977a6e8dc.png" />
+                                    <img
+                                        src="https://i2.hdslb.com/bfs/face/dfc20ec4a6e62d1604d55be06ce4ff6977a6e8dc.png"/>
                                 </div>
                             </div>
                         </div>
-                        <div className="stat-value text-primary">{JonyanFans}</div>
+                        <div className="stat-value text-primary">{BiliJonyanDunhData?.data?.follower}</div>
                         <div className="stat-title">粉丝</div>
                         <div className="stat-desc text-secondary font-bold">哔哩哔哩：JONYANDUNH</div>
                     </div>
@@ -688,7 +605,7 @@ export default function Page() {
                             </svg>
                         </div>
                         <div className="stat-title ">本工具服务人数</div>
-                        <div className="stat-value text-accent">{BiliToolsUserCounts}</div>
+                        <div className="stat-value text-accent">{BiliToolsUserCountsData?.data?.counts}</div>
                         <div className="stat-desc ">根据用户哔哩哔哩UID来统计</div>
                     </div>
                 </div>
@@ -877,6 +794,10 @@ export default function Page() {
                                                     setAlertModalTitle("登录信息错误")
                                                     setAlertModalInfo("bili_jct填写有误或已过期")
                                                     setAlertModalShowed(true)
+                                                } else {
+                                                    setAlertModalTitle("错误")
+                                                    setAlertModalInfo(data.message)
+                                                    setAlertModalShowed(true)
                                                 }
 
                                             })
@@ -1016,6 +937,10 @@ export default function Page() {
                                                 } else if (data.code === -111) {
                                                     setAlertModalTitle("登录信息错误")
                                                     setAlertModalInfo("bili_jct填写有误或已过期")
+                                                    setAlertModalShowed(true)
+                                                } else {
+                                                    setAlertModalTitle("错误")
+                                                    setAlertModalInfo(data.message)
                                                     setAlertModalShowed(true)
                                                 }
 
@@ -1182,6 +1107,10 @@ export default function Page() {
                                                         setAlertModalTitle("登录信息错误")
                                                         setAlertModalInfo("bili_jct填写有误或已过期")
                                                         setAlertModalShowed(true)
+                                                    } else {
+                                                        setAlertModalTitle("错误")
+                                                        setAlertModalInfo(data.message)
+                                                        setAlertModalShowed(true)
                                                     }
 
                                                 })
@@ -1315,6 +1244,10 @@ export default function Page() {
                                                         setAlertModalTitle("登录信息错误")
                                                         setAlertModalInfo("bili_jct填写有误或已过期")
                                                         setAlertModalShowed(true)
+                                                    } else {
+                                                        setAlertModalTitle("错误")
+                                                        setAlertModalInfo(data.message)
+                                                        setAlertModalShowed(true)
                                                     }
 
                                                 })
@@ -1424,6 +1357,10 @@ export default function Page() {
                                                         setAlertModalTitle("登录信息错误")
                                                         setAlertModalInfo("bili_jct填写有误或已过期")
                                                         setAlertModalShowed(true)
+                                                    } else {
+                                                        setAlertModalTitle("错误")
+                                                        setAlertModalInfo(data.message)
+                                                        setAlertModalShowed(true)
                                                     }
 
                                                 })
@@ -1467,8 +1404,8 @@ export default function Page() {
                                     <div className="grid flex-grow place-items-center">
                                         <div className="card relative  overflow-hidden w-80 h-45 ">
                                             <img
-                                                 src={BiliLiveroomCover}
-                                                 alt=""
+                                                src={BiliLiveroomCover}
+                                                alt=""
                                             />
                                         </div>
                                     </div>
@@ -1545,6 +1482,10 @@ export default function Page() {
                                                         } else if (data.code === -111) {
                                                             setAlertModalTitle("登录信息错误")
                                                             setAlertModalInfo("bili_jct填写有误或已过期")
+                                                            setAlertModalShowed(true)
+                                                        } else {
+                                                            setAlertModalTitle("错误")
+                                                            setAlertModalInfo(data.message)
                                                             setAlertModalShowed(true)
                                                         }
 
@@ -1642,6 +1583,10 @@ export default function Page() {
                                                         } else if (data.code === -111) {
                                                             setAlertModalTitle("登录信息错误")
                                                             setAlertModalInfo("bili_jct填写有误或已过期")
+                                                            setAlertModalShowed(true)
+                                                        } else {
+                                                            setAlertModalTitle("错误")
+                                                            setAlertModalInfo(data.message)
                                                             setAlertModalShowed(true)
                                                         }
 
@@ -1744,6 +1689,10 @@ export default function Page() {
                                                         } else if (data.code === -111) {
                                                             setAlertModalTitle("登录信息错误")
                                                             setAlertModalInfo("bili_jct填写有误或已过期")
+                                                            setAlertModalShowed(true)
+                                                        } else {
+                                                            setAlertModalTitle("错误")
+                                                            setAlertModalInfo(data.message)
                                                             setAlertModalShowed(true)
                                                         }
 
@@ -1900,6 +1849,10 @@ export default function Page() {
                                                         setAlertModalTitle("登录信息错误")
                                                         setAlertModalInfo("bili_jct填写有误或已过期")
                                                         setAlertModalShowed(true)
+                                                    } else {
+                                                        setAlertModalTitle("错误")
+                                                        setAlertModalInfo(data.message)
+                                                        setAlertModalShowed(true)
                                                     }
 
                                                 })
@@ -2011,6 +1964,10 @@ export default function Page() {
                                                         setAlertModalTitle("登录信息错误")
                                                         setAlertModalInfo("bili_jct填写有误或已过期")
                                                         setAlertModalShowed(true)
+                                                    } else {
+                                                        setAlertModalTitle("错误")
+                                                        setAlertModalInfo(data.message)
+                                                        setAlertModalShowed(true)
                                                     }
 
                                                 })
@@ -2047,7 +2004,7 @@ export default function Page() {
                                 <div className="avatar grid flex-grow place-items-center">
                                     <div className="card  relative  overflow-hidden w-48 h-48 ">
                                         <img
-                                             src={BiliUserFace}/>
+                                            src={BiliUserFace}/>
                                     </div>
                                 </div>
                                 <input hidden
