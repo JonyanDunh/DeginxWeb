@@ -10,7 +10,6 @@ import useSWRMutation from 'swr/mutation'
 
 var UrlDecode = require('url');
 
-
 export default function Page() {
     //const proxy_domain = "https://proxy.deginx.com"
     const proxy_domain = "/proxy"
@@ -653,9 +652,9 @@ export default function Page() {
     }
 
 
-    const bilibili_profile = <div className="card bilibili_profile   w-full sm:w-72 ">
+    const bilibili_profile =
+        <div className="card bilibili_profile   w-full sm:w-72 ">
         <div className="tabs ">
-
             <div onClick={() => {
                 setBiliInfoTab(0)
             }}
@@ -1604,10 +1603,7 @@ export default function Page() {
                         </div>
 
                     </div>
-                    <div ref={AlertRef} className="toast toast-end">
-
-
-                    </div>
+                    <div ref={AlertRef} className="toast toast-end"/>
                     <input onChange={(e) => {
                         setAlertModalShowed(e.target.checked)
                     }} checked={isAlertModalShowed} type="checkbox" id="AlertModal" className="modal-toggle"/>

@@ -1,6 +1,6 @@
 import Layout_sticky_navbar from "../../components/layout_sticky_navbar";
 import Link from "next/link";
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Image from "next/image";
 
