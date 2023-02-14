@@ -4,16 +4,16 @@ import React, {useEffect, useState} from 'react'
 import {useQRCode} from 'next-qrcode';
 import Cookies from 'js-cookie'
 import Head from 'next/head'
-import useSWR, { SWRConfig } from 'swr'
+import useSWR, {SWRConfig} from 'swr'
 import useSWRImmutable from 'swr/immutable'
 import useSWRMutation from 'swr/mutation'
 
 var UrlDecode = require('url');
 
 export default function Page() {
-    const proxy_domain = "https://proxy.deginx.com"
-    //const proxy_domain = "/proxy"
-    const domain = ".deginx.com"
+    //const proxy_domain = "https://proxy.deginx.com"
+    const proxy_domain = "/proxy"
+    const domain = ""
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -72,8 +72,8 @@ export default function Page() {
         credentials: 'include',
         redirect: 'follow'
     }).then(r => r.json())
-    const {data: BiliQrcodeData} = useSWR(!isBiliLogin ? proxy_domain + "/bilibili/passport/qrcode/getLoginUrl" : null, fetcher)
-    const {data: BiliQrcodeScanData} = useSWR(!isBiliLogin ? (BiliQrcodeData && !isQrcodeLogin && !isQrcodeFailed ? {
+    const {data: BiliQrcodeData} = useSWRImmutable(!isBiliLogin ? proxy_domain + "/bilibili/passport/qrcode/getLoginUrl" : null, fetcher)
+    const {data: BiliQrcodeScanData} = useSWRImmutable(!isBiliLogin ? (BiliQrcodeData && !isQrcodeLogin && !isQrcodeFailed ? {
         url: proxy_domain + "/bilibili/passport/qrcode/getLoginInfo",
         oauthKey: BiliQrcodeData.data.oauthKey
     } : null) : null, async (config) => {
@@ -101,7 +101,10 @@ export default function Page() {
     const {data: BiliArticleDraftsData} = useSWRImmutable(isBiliLogin ? proxy_domain + "/bilibili/member/x/web/draft/list" : null, fetcher)
     const {data: BiliJonyanDunhData} = useSWR(proxy_domain + "/bilibili/api/x/relation/stat?vmid=96876893", fetcher)
     const {data: BiliToolsUserCountsData} = useSWR("https://proxy.deginx.com/bilibili/tools/UserCounts/", fetcher)
-    const {trigger: BiliUploadImage, isMutating:isBiliUploadImageMutating} = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
+    const {
+        trigger: BiliUploadImage,
+        isMutating: isBiliUploadImageMutating
+    } = useSWRMutation(proxy_domain + "/bilibili/member/x/material/up/upload", async (url, {arg}) => {
         var formdata = new FormData();
         formdata.append("bucket", "material_up");
         formdata.append("dir", "");
@@ -111,9 +114,9 @@ export default function Page() {
             method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
         })
         var data = res?.json()
-        if(!data){
+        if (!data) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
@@ -134,7 +137,10 @@ export default function Page() {
         })
         return data
     })
-    const {trigger: PostRequest, isMutating:isBiliPostRequestMutating} = useSWRMutation("PostRequest", async (url, {arg}) => {
+    const {
+        trigger: PostRequest,
+        isMutating: isBiliPostRequestMutating
+    } = useSWRMutation("PostRequest", async (url, {arg}) => {
         const res = await fetch(arg.url, {
             method: 'POST',
             mode: 'cors',
@@ -144,9 +150,9 @@ export default function Page() {
             redirect: 'follow'
         })
         var data = res?.json()
-        if(!data){
+        if (!data) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
@@ -160,7 +166,10 @@ export default function Page() {
         })
         return data
     })
-    const {trigger: PutRequest, isMutating:isBiliPutRequestMutating} = useSWRMutation("PostRequest", async (url, {arg}) => {
+    const {
+        trigger: PutRequest,
+        isMutating: isBiliPutRequestMutating
+    } = useSWRMutation("PostRequest", async (url, {arg}) => {
         const res = await fetch(arg.url, {
             method: 'PUT',
             mode: 'cors',
@@ -170,9 +179,9 @@ export default function Page() {
             redirect: 'follow'
         })
         var data = res?.json()
-        if(!data){
+        if (!data) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:"+res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
@@ -185,7 +194,10 @@ export default function Page() {
         })
         return data
     })
-    const {trigger: GetRequest, isMutating:isBiliGetRequestMutating} = useSWRMutation("PostRequest", async (url, {arg}) => {
+    const {
+        trigger: GetRequest,
+        isMutating: isBiliGetRequestMutating
+    } = useSWRMutation("PostRequest", async (url, {arg}) => {
         const res = await fetch(arg.url, {
             method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
         })
@@ -206,6 +218,7 @@ export default function Page() {
             const data = await BiliUploadImage(base64ToFile("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAAnAAAAJwEqCZFPAAAADElEQVQImWNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC", "test.png"))
             if (data.code !== 0 && data.code !== 20414) clearCookie();
         }
+
         if (Cookies.get("isBiliLogin") === "true") validateLogin()
     }, [])
     useEffect(() => {
@@ -213,6 +226,7 @@ export default function Page() {
         if (BiliUserInfoData?.data?.face) setBiliUserFace(BiliUserInfoData.data.face)
     }, [BiliUserInfoData])
     useEffect(() => {
+        if(BiliLiveRoomShowCoverData?.data)
         if (BiliLiveRoomShowCoverData?.data[0]?.url && BiliLiveRoomShowCoverData?.data[0]?.url !== "") setBiliLiveroomShowCover(BiliLiveRoomShowCoverData?.data[0]?.url)
     }, [BiliLiveRoomShowCoverData])
     useEffect(() => {
@@ -220,24 +234,34 @@ export default function Page() {
         if (BiliLiveRoomCoverData?.data?.coverVertical?.url && BiliLiveRoomCoverData?.data?.coverVertical?.url !== "") setBiliLiveroomCoverVertical(BiliLiveRoomCoverData.data.coverVertical.url)
     }, [BiliLiveRoomCoverData])
     useEffect(() => {
-        if (BiliArticlesListData?.data?.lists) setBiliArticlesList(BiliArticlesListData.data.lists)
-        if (BiliArticlesListData?.data?.lists[0]?.image_url && BiliArticlesListData?.data?.lists[0]?.image_url !== "") setBiliArticleListCover(BiliArticlesListData.data.lists[0].image_url)
+        if (BiliArticlesListData?.data?.lists) {
+            setBiliArticlesList(BiliArticlesListData.data.lists)
+            if (BiliArticlesListData?.data?.lists[0]?.image_url && BiliArticlesListData?.data?.lists[0]?.image_url !== "") setBiliArticleListCover(BiliArticlesListData.data.lists[0].image_url)
+        }
     }, [BiliArticlesListData])
     useEffect(() => {
-        if (BiliVideoSeasonsData?.data?.seasons) setBiliVideoSeasons(BiliVideoSeasonsData.data.seasons)
-        if (BiliVideoSeasonsData?.data?.seasons[0]?.season.cover && BiliVideoSeasonsData?.data?.seasons[0]?.season.cover !== "") setBiliVideoSeasonsCover(BiliVideoSeasonsData.data.seasons[0].season.cover)
+        if (BiliVideoSeasonsData?.data?.seasons) {
+            setBiliVideoSeasons(BiliVideoSeasonsData.data.seasons)
+            if (BiliVideoSeasonsData?.data?.seasons[0]?.season.cover && BiliVideoSeasonsData?.data?.seasons[0]?.season.cover !== "") setBiliVideoSeasonsCover(BiliVideoSeasonsData.data.seasons[0].season.cover)
+        }
     }, [BiliVideoSeasonsData])
     useEffect(() => {
-        if (BiliMusicCompilationsData?.data?.list) setBiliMusicCompilations(BiliMusicCompilationsData.data.list)
-        if (BiliMusicCompilationsData?.data?.list[0]?.cover_url && BiliMusicCompilationsData?.data?.list[0]?.cover_url !== "") setBiliMusicCompilationsCover(BiliMusicCompilationsData.data.list[0].cover_url)
+        if (BiliMusicCompilationsData?.data?.list) {
+            setBiliMusicCompilations(BiliMusicCompilationsData.data.list)
+            if (BiliMusicCompilationsData?.data?.list[0]?.cover_url && BiliMusicCompilationsData?.data?.list[0]?.cover_url !== "") setBiliMusicCompilationsCover(BiliMusicCompilationsData.data.list[0].cover_url)
+        }
     }, [BiliMusicCompilationsData])
     useEffect(() => {
-        if (BiliFoldersData?.data?.list) setBiliFolders(BiliFoldersData.data.list)
-        if (BiliFoldersData?.data?.list[0]?.cover && BiliFoldersData?.data?.list[0]?.cover !== "") setBiliFolderCover(BiliFoldersData.data.list[0].cover)
+        if (BiliFoldersData?.data?.list) {
+            setBiliFolders(BiliFoldersData.data.list)
+            if (BiliFoldersData?.data?.list[0]?.cover && BiliFoldersData?.data?.list[0]?.cover !== "") setBiliFolderCover(BiliFoldersData.data.list[0].cover)
+        }
     }, [BiliFoldersData])
     useEffect(() => {
-        if (BiliMusicsData?.data?.list) setBiliMusics(BiliMusicsData.data.list)
-        if (BiliMusicsData?.data?.list[0]?.cover_url && BiliMusicsData?.data?.list[0]?.cover_url !== "") setBiliMusicCover(BiliMusicsData.data.list[0].cover_url)
+        if (BiliMusicsData?.data?.list) {
+            setBiliMusics(BiliMusicsData.data.list)
+            if (BiliMusicsData?.data?.list[0]?.cover_url && BiliMusicsData?.data?.list[0]?.cover_url !== "") setBiliMusicCover(BiliMusicsData.data.list[0].cover_url)
+        }
     }, [BiliMusicsData])
     useEffect(() => {
         if (!BiliArticlesData || !BiliArticleDraftsData)
@@ -364,6 +388,7 @@ export default function Page() {
 
 
     }
+
     async function BiliUploadVideoSeasonsCover() {
         const data = await BiliUploadImage(NewBiliVideoSeasonsCoverFileRef.current.files[0])
         if (data?.code !== 0)
@@ -696,7 +721,8 @@ export default function Page() {
                      className={`${BiliInfoTab == 1 ? "bg-base-100 " : ""} rounded-t-box tab w-1/2 tab-lg tab-lifted font-semibold border-b-0`}>退出
                 </div>
             </div>
-            <div className={` ${BiliInfoTab == 0 ? "rounded-tr-box" : "rounded-tl-box"}  tab_content bg-base-100 rounded-b-box border-t-0`}>
+            <div
+                className={` ${BiliInfoTab == 0 ? "rounded-tr-box" : "rounded-tl-box"}  tab_content bg-base-100 rounded-b-box border-t-0`}>
                 <div className="flex flex-col">
                     <div className="avatar justify-center m-6 ">
                         <div className="w-32 rounded-box">
@@ -1031,8 +1057,8 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliFolderCoverFileRef}
                                            onChangeCapture={(e) => {
-                                               if(URL?.createObjectURL(e?.target?.files[0]))
-                                               setBiliFolderCover(URL.createObjectURL(e.target.files[0]))
+                                               if (URL?.createObjectURL(e?.target?.files[0]))
+                                                   setBiliFolderCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
                                     <select value={BiliSelectedFolder}
@@ -1106,8 +1132,8 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliVideoSeasonsCoverFileRef}
                                            onChangeCapture={(e) => {
-                                               if(URL?.createObjectURL(e?.target?.files[0]))
-                                               setBiliVideoSeasonsCover(URL.createObjectURL(e.target.files[0]))
+                                               if (URL?.createObjectURL(e?.target?.files[0]))
+                                                   setBiliVideoSeasonsCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
                                     <select value={BiliSelectedVideoSeasons}
@@ -1187,8 +1213,8 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliArticleCoverFileRef}
                                                onChangeCapture={(e) => {
-                                                   if(URL?.createObjectURL(e?.target?.files[0]))
-                                                   setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
+                                                   if (URL?.createObjectURL(e?.target?.files[0]))
+                                                       setBiliArticleCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
                                         <select value={BiliSelectedArticleCover}
@@ -1237,8 +1263,8 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliArticleHeaderFileRef}
                                                onChangeCapture={(e) => {
-                                                   if(URL?.createObjectURL(e?.target?.files[0]))
-                                                   setBiliArticleHeader(URL.createObjectURL(e.target.files[0]))
+                                                   if (URL?.createObjectURL(e?.target?.files[0]))
+                                                       setBiliArticleHeader(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
                                         <select value={BiliSelectedArticleHeader}
@@ -1287,8 +1313,8 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliArticleListCoverFileRef}
                                                onChangeCapture={(e) => {
-                                                   if(URL?.createObjectURL(e?.target?.files[0]))
-                                                   setBiliArticleListCover(URL.createObjectURL(e.target.files[0]))
+                                                   if (URL?.createObjectURL(e?.target?.files[0]))
+                                                       setBiliArticleListCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
                                         <select value={BiliSelectedArticleList}
@@ -1357,8 +1383,8 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliLiveroomCoverFileRef}
                                            onChangeCapture={(e) => {
-                                               if(URL?.createObjectURL(e?.target?.files[0]))
-                                               setBiliLiveroomCover(URL.createObjectURL(e.target.files[0]))
+                                               if (URL?.createObjectURL(e?.target?.files[0]))
+                                                   setBiliLiveroomCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
                                     <div className="flex  justify-center gap-4">
@@ -1397,8 +1423,8 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliLiveroomShowCoverFileRef}
                                            onChangeCapture={(e) => {
-                                               if(URL?.createObjectURL(e?.target?.files[0]))
-                                               setBiliLiveroomShowCover(URL.createObjectURL(e.target.files[0]))
+                                               if (URL?.createObjectURL(e?.target?.files[0]))
+                                                   setBiliLiveroomShowCover(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
                                     <div className="flex  justify-center gap-4">
@@ -1438,8 +1464,8 @@ export default function Page() {
                                            type="file"
                                            ref={NewBiliLiveroomCoverVerticalFileRef}
                                            onChangeCapture={(e) => {
-                                               if(URL?.createObjectURL(e?.target?.files[0]))
-                                               setBiliLiveroomCoverVertical(URL.createObjectURL(e.target.files[0]))
+                                               if (URL?.createObjectURL(e?.target?.files[0]))
+                                                   setBiliLiveroomCoverVertical(URL.createObjectURL(e.target.files[0]))
                                            }}
                                     />
                                     <div className="flex  justify-center gap-4">
@@ -1513,8 +1539,8 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliMusicCoverFileRef}
                                                onChangeCapture={(e) => {
-                                                   if(URL?.createObjectURL(e?.target?.files[0]))
-                                                   setBiliMusicCover(URL.createObjectURL(e.target.files[0]))
+                                                   if (URL?.createObjectURL(e?.target?.files[0]))
+                                                       setBiliMusicCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
                                         <select value={BiliSelectedMusic}
@@ -1562,8 +1588,8 @@ export default function Page() {
                                                type="file"
                                                ref={NewBiliMusicCompilationsCoverFileRef}
                                                onChangeCapture={(e) => {
-                                                   if(URL?.createObjectURL(e?.target?.files[0]))
-                                                   setBiliMusicCompilationsCover(URL.createObjectURL(e.target.files[0]))
+                                                   if (URL?.createObjectURL(e?.target?.files[0]))
+                                                       setBiliMusicCompilationsCover(URL.createObjectURL(e.target.files[0]))
                                                }}
                                         />
                                         <select value={BiliSelectedMusicCompilations}
@@ -1624,8 +1650,8 @@ export default function Page() {
                                        type="file"
                                        ref={NewBiliUserFaceFileRef}
                                        onChangeCapture={(e) => {
-                                           if(URL?.createObjectURL(e?.target?.files[0]))
-                                           setBiliUserFace(URL.createObjectURL(e.target.files[0]))
+                                           if (URL?.createObjectURL(e?.target?.files[0]))
+                                               setBiliUserFace(URL.createObjectURL(e.target.files[0]))
                                        }}
                                 />
                                 <div className="flex  justify-center gap-4">
@@ -1654,14 +1680,14 @@ export default function Page() {
                             <p className="py-4">{AlertModalInfo}</p>
                         </label>
                     </label>
-                {(isBiliUploadImageMutating||isBiliPostRequestMutating||isBiliPutRequestMutating||isBiliGetRequestMutating)?
-                    <div className="toast toast-end">
-                        <div className="alert alert-info">
-                            <div>
-                                <span>正在向服务器请求数据~</span>
+                    {(isBiliUploadImageMutating || isBiliPostRequestMutating || isBiliPutRequestMutating || isBiliGetRequestMutating) ?
+                        <div className="toast toast-end">
+                            <div className="alert alert-info">
+                                <div>
+                                    <span>正在向服务器请求数据~</span>
+                                </div>
                             </div>
-                        </div>
-                    </div>:""}
+                        </div> : ""}
                 </div>
 
             )}
