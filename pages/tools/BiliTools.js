@@ -85,7 +85,21 @@ export default function Page() {
         getQrcodeInfoTimes += 1
         if (getQrcodeInfoTimes >= 60)
             setQrcodeFailed(true)
-        return res.json()
+        if (!res.ok) {
+            setAlertModalTitle("请求错误")
+            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalShowed(true)
+            return null
+        }
+        const data = res.json();
+        data.then(result => {
+            if (result?.code !== 0) {
+                setAlertModalTitle("请求错误")
+                setAlertModalInfo(result.message)
+                setAlertModalShowed(true)
+            }
+        })
+        return data
     }, {refreshInterval: 1000})
     const {data: BiliUserInfoData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/space/myinfo" : null, fetcher)
     const {data: BiliUserStatData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/web-interface/nav/stat" : null, fetcher)
@@ -113,13 +127,14 @@ export default function Page() {
         const res = await fetch(url, {
             method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
         })
-        var data = res?.json()
-        if (!data) {
+
+        if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:" + res.status)
+            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
+        const data = res.json();
         data.then(result => {
             if (result.code === -101) {
                 setAlertModalTitle("登录信息错误")
@@ -149,13 +164,13 @@ export default function Page() {
             credentials: 'include',
             redirect: 'follow'
         })
-        var data = res?.json()
-        if (!data) {
+        if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:" + res.status)
+            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
+        const data = res.json();
         let code = [0, 10003, 65006, 34002, 34004, 34005, 22001]
         data.then(result => {
             if (!code.includes(result.code)) {
@@ -178,13 +193,13 @@ export default function Page() {
             credentials: 'include',
             redirect: 'follow'
         })
-        var data = res?.json()
-        if (!data) {
+        if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo("API网关返回状态码:" + res.status)
+            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
+        const data = res.json();
         data.then(result => {
             if (result?.code !== 0) {
                 setAlertModalTitle("请求错误")
@@ -201,7 +216,21 @@ export default function Page() {
         const res = await fetch(arg.url, {
             method: 'GET', mode: 'cors', credentials: 'include', redirect: 'follow'
         })
-        return res?.json()
+        if (!res.ok) {
+            setAlertModalTitle("请求错误")
+            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalShowed(true)
+            return null
+        }
+        const data = res.json();
+        data.then(result => {
+            if (result?.code !== 0) {
+                setAlertModalTitle("请求错误")
+                setAlertModalInfo(result.message)
+                setAlertModalShowed(true)
+            }
+        })
+        return data
     })
     const ImageLoader = ({src}) => {
         return src
@@ -981,7 +1010,7 @@ export default function Page() {
             {(<div>
                     <Head>
                         <link rel="icon" type="image/x-icon"
-                              href="https://message.biliimg.com/bfs/im/d4397121cbf9b41269c03758bfeafb696ca2d0e1.png"/>
+                              href="https://message.biliimg.com/bfs/im/57ceadf12d47b1f46f0f260bfc63a3536f1bbaec.png"/>
                         <title>哔哩哔哩工具箱 - DeginX</title>
                     </Head>
                     <div className=" grid grid-cols-1  sm:mx-0 sm:grid-cols-3 auto-rows-max gap-4 ">
