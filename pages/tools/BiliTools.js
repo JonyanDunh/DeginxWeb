@@ -11,9 +11,9 @@ import useSWRMutation from 'swr/mutation'
 var UrlDecode = require('url');
 
 export default function Page() {
-    //const proxy_domain = "https://proxy.deginx.com"
-    const proxy_domain = "/proxy"
-    const domain = ""
+    const proxy_domain = "https://proxy.deginx.com"
+    //const proxy_domain = "/proxy"
+    const domain = ".deginx.com"
     const {Canvas} = useQRCode();
     const [isAlertModalShowed, setAlertModalShowed] = useState(false)
     const [AlertModalInfo, setAlertModalInfo] = useState("")
@@ -63,9 +63,17 @@ export default function Page() {
     const NewBiliMusicCoverFileRef = React.useRef();
     const NewBiliFolderCoverFileRef = React.useRef();
     const [BiliInfoTab, setBiliInfoTab] = useState(0);
-    const AlertRef = React.useRef();
     var getQrcodeInfoTimes = 0
-
+    const [BiliExceededSizeImageUrl, setBiliExceededSizeImageUrl] = useState("")
+    const [isBiliExceededSizeImageChoosingModalShowed, setBiliExceededSizeImageChoosingModalShowed] = useState(false)
+    let isBiliExceededSizeImageChoosingModalShowedRef = React.useRef();
+    let BiliExceededSizeImageUrlRef = React.useRef();
+    useEffect(() => {
+        isBiliExceededSizeImageChoosingModalShowedRef.current =isBiliExceededSizeImageChoosingModalShowed;
+    },[isBiliExceededSizeImageChoosingModalShowed]);
+    useEffect(() => {
+        BiliExceededSizeImageUrlRef.current =BiliExceededSizeImageUrl;
+    },[BiliExceededSizeImageUrl]);
     const fetcher = url => fetch(url, {
         method: 'GET',
         mode: 'cors',
@@ -87,18 +95,11 @@ export default function Page() {
             setQrcodeFailed(true)
         if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
         const data = res.json();
-        data.then(result => {
-            if (result?.code !== 0) {
-                setAlertModalTitle("请求错误")
-                setAlertModalInfo(result.message)
-                setAlertModalShowed(true)
-            }
-        })
         return data
     }, {refreshInterval: 1000})
     const {data: BiliUserInfoData} = useSWR(isBiliLogin ? proxy_domain + "/bilibili/api/x/space/myinfo" : null, fetcher)
@@ -128,11 +129,26 @@ export default function Page() {
             method: 'POST', mode: 'cors', body: formdata, credentials: 'include', redirect: 'follow'
         })
 
-        if (!res.ok) {
+        if (!res.ok&&res.status!==406) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
+        }else if(res.status===406)
+        {
+            setBiliExceededSizeImageChoosingModalShowed(true)
+            await new Promise( (resolve) =>{
+                let timer = setInterval(() =>{
+                    if(!isBiliExceededSizeImageChoosingModalShowedRef.current){
+                        clearInterval(timer)
+                        resolve(true)
+                    }
+                },100)
+
+            })
+            const BiliExceededSizeImageUrl= BiliExceededSizeImageUrlRef.current
+            setBiliExceededSizeImageUrl("")
+            return BiliExceededSizeImageUrl?{code:0,data:{location:BiliExceededSizeImageUrl}}:null
         }
         const data = res.json();
         data.then(result => {
@@ -166,7 +182,7 @@ export default function Page() {
         })
         if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
@@ -195,7 +211,7 @@ export default function Page() {
         })
         if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
@@ -218,18 +234,11 @@ export default function Page() {
         })
         if (!res.ok) {
             setAlertModalTitle("请求错误")
-            setAlertModalInfo(res.status===406?"图片上传大小超过6MB啦~请重新选择其他图片":"API网关返回状态码:" + res.status)
+            setAlertModalInfo("API网关返回状态码:" + res.status)
             setAlertModalShowed(true)
             return null
         }
         const data = res.json();
-        data.then(result => {
-            if (result?.code !== 0) {
-                setAlertModalTitle("请求错误")
-                setAlertModalInfo(result.message)
-                setAlertModalShowed(true)
-            }
-        })
         return data
     })
     const ImageLoader = ({src}) => {
@@ -420,6 +429,7 @@ export default function Page() {
 
     async function BiliUploadVideoSeasonsCover() {
         const data = await BiliUploadImage(NewBiliVideoSeasonsCoverFileRef.current.files[0])
+
         if (data?.code !== 0)
             return
         const VideoSeason = BiliVideoSeasons[BiliSelectedVideoSeasons];
@@ -1699,7 +1709,6 @@ export default function Page() {
                         </div>
 
                     </div>
-                    <div ref={AlertRef} className="toast toast-end"/>
                     <input onChange={(e) => {
                         setAlertModalShowed(e.target.checked)
                     }} checked={isAlertModalShowed} type="checkbox" id="AlertModal" className="modal-toggle"/>
@@ -1709,6 +1718,23 @@ export default function Page() {
                             <p className="py-4">{AlertModalInfo}</p>
                         </label>
                     </label>
+                    <input onChange={(e) => {
+                        setBiliExceededSizeImageChoosingModalShowed(e.target.checked)
+                    }} checked={isBiliExceededSizeImageChoosingModalShowed} type="checkbox" id="my-modal-3" className="modal-toggle" />
+                    <div className="modal flex ">
+                        <div className="modal-box relative">
+                            <label onClick={()=>{setBiliExceededSizeImageChoosingModalShowed(false)
+                                setBiliExceededSizeImageUrl("")}} className="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
+                            <h3 className="text-lg font-bold">请求错误</h3>
+                            <p className="py-4">你上传的图片超过6MB啦~请选择其他图片，<br/>或者把图片上传到<a className="font-bold">哔哩哔哩图床</a>，然后在下方输入图片链接后上传</p>
+                           <div className="flex gap-4 justify-center">
+                            <input value={BiliExceededSizeImageUrl} onChange={e => {
+                                setBiliExceededSizeImageUrl(decodeURIComponent(e.currentTarget.value));
+                            }} type="text" placeholder="图片链接" className="input input-bordered input-success w-full max-w-xs" />
+                            <button onClick={()=>setBiliExceededSizeImageChoosingModalShowed(false)} className="btn btn-secondary">上传图片</button>
+                           </div>
+                        </div>
+                    </div>
                     {(isBiliUploadImageMutating || isBiliPostRequestMutating || isBiliPutRequestMutating || isBiliGetRequestMutating) ?
                         <div className="toast toast-end">
                             <div className="alert alert-info">

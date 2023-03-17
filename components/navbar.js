@@ -34,6 +34,11 @@ export default function Navbar({}) {
                             className={`btn  btn-ghost sm:block  ${"/tools" == router.pathname ? "btn-active" : ""}`}>工具
                         </button>
                     </Link>
+                    <Link href="/FrenchTea">
+                        <button
+                            className={`btn  btn-ghost sm:block  ${"/FrenchTea" == router.pathname ? "btn-active" : ""}`}>法国茶叶
+                        </button>
+                    </Link>
                     <button className="btn btn-ghost hidden ">插件</button>
                     <button className="btn btn-ghost hidden ">开放平台</button>
                     <button className="btn btn-ghost hidden  ">文档</button>
